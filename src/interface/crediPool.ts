@@ -9,5 +9,6 @@ interface CreditPool {
     Period: number;
     FinalValue: number;
     isFull: boolean;
-    contracts: Contract[]; // Ajout
+    maxPeople:number,
+    contracts: Contract[];
 }

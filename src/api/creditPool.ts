@@ -15,7 +15,6 @@ export async function fetchCreditPools(params: Record<string, string>) {
 
     return response.json();
 }
-// @/api/creditPool.ts
 
 export async function createCreditPool(payload: {
     Frequency: number;
@@ -39,3 +38,51 @@ export async function createCreditPool(payload: {
 
     return response.json();
 }
+export async function fetchMyCreditPools() {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/creditpool/my-pools`, {
+        credentials: "include",
+    });
+
+    if (!res.ok) {
+        throw new Error("Failed to fetch user's credit pools");
+    }
+
+    return res.json();
+}
+export async function leaveCreditPool(creditPoolId: number) {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/creditpool/leave/${creditPoolId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+    });
+
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to leave credit pool");
+    }
+
+    return res.json();
+}
+export async function sendReplacementRequest(
+    creditPoolId: number,
+    replacementEmail: string
+) {
+    const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/creditpool/replacement-request`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify({ creditPoolId, replacementEmail }),
+        }
+    );
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to send replacement request");
+    }
+
+    return response.json();
+}
+

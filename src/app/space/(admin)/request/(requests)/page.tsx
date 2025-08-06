@@ -1,6 +1,4 @@
-// ✅ Updated RequestsTable component with:
-// 1. Unique key for fragment
-// 2. Document previews in modal viewer
+
 
 "use client";
 
@@ -89,7 +87,6 @@ export default function RequestsTable() {
                     }
                 }
 
-                // Optional general access check
                 const accessGrantedByRequest = await checkUserAccess();
                 const isOnlyClient = roles.length === 1 && roles.includes("Client");
                 const isAdmin = roles.includes("Admin");

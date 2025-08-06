@@ -23,7 +23,6 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import {AuditStatus, AuditType} from "@/interface/audit";
 
 export default function LogsTable() {
-    // Activity Logs State
     const [logs, setLogs] = useState<any[]>([]);
     const [search, setSearch] = useState("");
     const [startDate, setStartDate] = useState<Date | undefined>();
@@ -32,7 +31,6 @@ export default function LogsTable() {
     const [totalPages, setTotalPages] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Audits State
     const [audits, setAudits] = useState<any[]>([]);
     const [auditPage, setAuditPage] = useState(1);
     const [auditTotalPages, setAuditTotalPages] = useState(1);

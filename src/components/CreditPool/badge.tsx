@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { cn } from "@/lib/utils"; // You can replace with clsx or normal join if needed
+import { cn } from "@/lib/utils";
 
 export type BadgeVariant =
     | "default"

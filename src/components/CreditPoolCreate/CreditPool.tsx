@@ -12,7 +12,6 @@ export default function CreateCreditPoolForm() {
         FinalValue: "",
     });
 
-    // ⚙️ Phrase calculée dynamiquement
     const calculationMessage = useMemo(() => {
         const frequency = parseInt(formData.Frequency);
         const period = parseInt(formData.Period);

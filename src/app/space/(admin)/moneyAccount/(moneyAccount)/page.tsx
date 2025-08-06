@@ -1,24 +1,77 @@
 "use client";
-
 import React, { useEffect, useState } from "react";
-import ComponentCard from "@/components/common/ComponentCard";
+import MoneyAccountDashboard from "@/components/AccountMoney/AccountMoney";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
-import UsersTable from "@/components/UsersTable/UsersTable";
-import { LockIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { checkUserAccess } from "@/api/user";
+import ComponentCard from "@/components/common/ComponentCard";
+import StripeWrapper from "@/components/AccountMoney/StripeWrapper";
+import {parseJwt} from "@/lib/jwt";
+import {checkUserAccess} from "@/api/user";
+import {LockIcon} from "lucide-react";
+import {router} from "next/client";
 
-export default function CreditPoolsPage() {
+export default function CreditPools() {
+    const [dashboardData, setDashboardData] = useState({
+        balance: 0,
+        cards: [],
+        logs: []
+    });
     const [userHasAccess, setUserHasAccess] = useState<boolean | null>(null);
-    const router = useRouter();
+    const [isAgent, setIsAgent] = useState(false);
+    const [isAuditor, setIsAuditor] = useState(false);
+    useEffect(() => {
+        const fetchDashboard = async () => {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/account/dashboard-data`, {
+                credentials: "include"
+            });
+            const data = await res.json();
+            setDashboardData(data);
+        };
 
+        fetchDashboard();
+    }, []);
     useEffect(() => {
         const fetchAccess = async () => {
             try {
-                const access = await checkUserAccess();
-                setUserHasAccess(access);
+                const token = document.cookie
+                    .split("; ")
+                    .find((row) => row.startsWith("access_token="))
+                    ?.split("=")[1];
+
+                let roles: string[] = [];
+
+                if (token) {
+                    const decoded = parseJwt(token);
+                    if (decoded?.roles) {
+                        roles = decoded.roles;
+
+                        const isAgentRole = roles.includes("Agent");
+                        const isAuditorRole = roles.includes("Auditor");
+                        const isAdminRole = roles.includes("Admin");
+
+                        // ✅ Set individual states
+                        setIsAgent(isAgentRole);
+                        setIsAuditor(isAuditorRole);
+
+                        // ✅ Log real values
+                        console.log("Agent:", isAgentRole);
+                        console.log("Auditor:", isAuditorRole);
+
+                        // ✅ Access control
+                        const accessGrantedByRequest = await checkUserAccess();
+                        const isOnlyClient = roles.length === 1 && roles.includes("Client");
+
+                        const finalAccess =
+                            isAdminRole || isAgentRole || isAuditorRole || (isOnlyClient && accessGrantedByRequest);
+
+                        setUserHasAccess(finalAccess);
+                        return;
+                    }
+                }
+
+                // No token or roles → access denied
+                setUserHasAccess(false);
             } catch (error) {
-                console.error("Access check failed:", error);
+                console.error("Error checking access:", error);
                 setUserHasAccess(false);
             }
         };
@@ -26,23 +79,28 @@ export default function CreditPoolsPage() {
         fetchAccess();
     }, []);
 
-    if (userHasAccess === null) return null; // loading or placeholder
+    if (userHasAccess === null) return null; // or loading spinner
 
     return (
         <div>
-            <PageBreadcrumb pageTitle="Users" />
-
             <div
-                className={`space-y-6 ${
-                    !userHasAccess ? "blur-sm opacity-40 pointer-events-none" : ""
+                className={` ${
+                    !userHasAccess ? "blur-sm opacity-90 pointer-events-none" : ""
                 }`}
             >
-                <ComponentCard title="Users Overview">
-                    <UsersTable />
-                </ComponentCard>
+            <PageBreadcrumb pageTitle="Payment" />
+            <ComponentCard title="Dashboard">
+                <StripeWrapper>
+                <MoneyAccountDashboard
+                    userHasAccess={true}
+                    balance={dashboardData.balance}
+                    cards={dashboardData.cards}
+                    logs={dashboardData.logs}
+                />
+                </StripeWrapper>
+            </ComponentCard>
             </div>
-
-            {!userHasAccess && (
+            {userHasAccess === false && (
                 <div className="fixed inset-0 z-30 flex items-center justify-center bg-white/90 dark:bg-black/80">
                     <div className="text-center px-6 py-8 bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 max-w-md w-full">
                         <div className="flex justify-center mb-4">

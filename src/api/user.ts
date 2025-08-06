@@ -1,3 +1,6 @@
+import {User} from "@/interface/User";
+import {parseJwt} from "@/lib/jwt";
+
 export async function fetchUsers(params: Record<string, string>) {
     const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/user/users/search`);
 
@@ -15,9 +18,9 @@ export async function fetchUsers(params: Record<string, string>) {
         throw new Error("Failed to fetch users");
     }
 
-    const data = await response.json(); // ✅ await the response
+    const data = await response.json();
 
-    console.log("Fetched users:", data); // Inspect the entire structure
+    console.log("Fetched users:", data);
     return data;
 }
 
@@ -81,3 +84,35 @@ export async function checkUserAccess(): Promise<boolean> {
     const data = await response.json();
     return data.hasAccess;
 }
+
+
+export async function fetchCurrentUser(): Promise<User | null> {
+    const token = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("access_token="))
+        ?.split("=")[1];
+
+    if (!token) return null;
+
+    const decoded = parseJwt(token);
+    const uid = decoded?.sub;
+
+    if (!uid) return null;
+
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/current-user`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+        credentials: "include",
+    });
+
+    if (!res.ok) {
+        console.error("Failed to fetch current user");
+        return null;
+    }
+
+    const data = await res.json();
+    return data.hasAccess || null;
+}
+
+

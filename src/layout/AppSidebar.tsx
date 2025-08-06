@@ -48,15 +48,14 @@ const navItems: NavItem[] = [
     allowedRoles: ["Client", "Admin"],
     subItems: [
       { name: "Credit Pools", path: "/space/creditPool", allowedRoles: ["Client", "Admin"] },
-      { name: "Your Credit Pools", path: "/space/form-elements", allowedRoles: ["Client"] },
-      { name: "Contract", path: "/space/...", allowedRoles: ["Admin"] },
+      { name: "Your Credit Pools", path: "/space/creditPool/myCreditPools", allowedRoles: ["Client"] },
     ],
   },
   {
     name: "Garent",
     icon: <LockIcon />,
-    path: "/space/basic-tables",
-    allowedRoles: ["Admin"],
+    path: "/space/garent",
+    allowedRoles: ["Admin","Agent","Client"],
   },
   {
     name: "Request",
@@ -73,12 +72,10 @@ const navItems: NavItem[] = [
   {
     name: "Logs",
     icon: <PageIcon />,
+    path: "/space/activities",
     allowedRoles: ["Admin", "Auditor"],
-    subItems: [
-      { name: "Activities", path: "/space/activities", allowedRoles: ["Admin"] },
-      { name: "Cases", path: "/space/blank", allowedRoles: ["Admin"] },
-    ],
   },
+
 ];
 
 const AppSidebar: React.FC = () => {

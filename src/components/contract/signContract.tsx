@@ -1,16 +1,16 @@
 "use client";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import html2canvas from "html2canvas-pro";
 import jsPDF from "jspdf";
-import { createContract } from "@/api/contract";
+import { createContract, fetchTakenRanks } from "@/api/contract";
+import Label from "@/components/form/Label";
+import Input from "@/components/form/input/InputField";
+import Select from "@/components/form/Select";
 
-// Dynamic import to fix compatibility issues
-const SignatureCanvas = dynamic(() => import("react-signature-canvas"), {
-    ssr: false,
-}) as any;
+const SignatureCanvas = dynamic(() => import("react-signature-canvas"), { ssr: false }) as any;
 
 type Props = {
     isOpen: boolean;
@@ -33,9 +33,35 @@ export default function SignContractModal({
     const scrollRef = useRef<HTMLDivElement>(null);
     const signatureRef = useRef<any>(null);
     const [isGenerating, setIsGenerating] = useState(false);
-
+    const [takenRanks, setTakenRanks] = useState<number[]>([]);
+    const [selectedRank, setSelectedRank] = useState<string>("0");
+    const [availableRanks, setAvailableRanks] = useState<{ label: string; value: string }[]>([]);
     const steps = Math.floor(period / frequency);
-    const amountPerStep = steps > 0 ? finalValue / steps : 0;
+    const basePayment = finalValue  / steps;
+    const totalProfit = finalValue * 0.005;
+    const mid = Math.ceil(steps / 2);
+
+    const rankNumber = parseInt(selectedRank);
+    const normalized = selectedRank === "0" ? 0 : (mid - rankNumber) / (steps - 1);
+    const adjustment = normalized * totalProfit;
+    const finalPayment = basePayment + adjustment;
+
+    useEffect(() => {
+        if (isOpen && creditPoolId) {
+            fetchTakenRanks(creditPoolId).then((taken) => {
+                setTakenRanks(taken);
+                const options = [{ label: "Random", value: "0" }];
+                const maxParticipants = steps;
+                for (let i = 1; i <= maxParticipants; i++) {
+                    if (!taken.includes(i)) {
+                        options.push({ label: `Position ${i}`, value: String(i) });
+                    }
+                }
+                setAvailableRanks(options);
+            });
+        }
+    }, [isOpen, creditPoolId, steps]);
+
 
     const handleGenerateContract = async () => {
         if (!signatureRef.current || signatureRef.current.isEmpty()) {
@@ -76,13 +102,14 @@ export default function SignContractModal({
             await createContract(
                 {
                     contractDate: new Date(),
-                    amount: finalValue,
+                    amount: finalPayment *(period / frequency),
                     creditPoolId: creditPoolId,
                     period,
+                    frequency,
+                    rank: parseInt(selectedRank),
                 },
                 file
             );
-            console.log(creditPoolId);
 
             alert("✅ Contract submitted successfully.");
             onClose();
@@ -133,12 +160,22 @@ export default function SignContractModal({
                     defaulting participants or unforeseen events.
                 </p>
                 <p>
-                    By signing below, you confirm your agreement to the terms.
+                    By signing below,
+                    <strong>You agree to pay:</strong>{" "}
+                    <span style={{ color: "red", fontWeight: "bold" }}>
+            {finalPayment.toFixed(2)} DT
+          </span>{" "}
+                    every {frequency} month(s), over {period} months.
                 </p>
-                <p style={{ color: "red", fontWeight: "bold", marginTop: "1rem" }}>
-                    You agree to pay {amountPerStep.toFixed(2)} DT every {frequency} month(s) to reach{" "}
-                    {finalValue} DT over {period} months.
-                </p>
+                    {selectedRank !== "0" && (
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
+                            Based on your selected rank <strong>({selectedRank})</strong>,{" "}
+                            {adjustment > 0
+                                ? `you benefit from a bonus of +${adjustment.toFixed(2)} DT`
+                                : `you contribute an additional ${Math.abs(adjustment).toFixed(2)} DT`}{" "}
+                            to balance the system and ensure fairness.
+                        </p>
+                    )}
             </div>
 
             <p className="mt-4 text-sm text-gray-600 dark:text-gray-300">Please sign below:</p>
@@ -147,6 +184,16 @@ export default function SignContractModal({
                     penColor="black"
                     ref={signatureRef}
                     canvasProps={{ width: 400, height: 150, className: "sigCanvas" }}
+                />
+            </div>
+
+            <div className="my-4">
+                <Label>Select Cashout Position</Label>
+                <Select
+                    options={availableRanks}
+                    placeholder="Choose your position"
+                    onChange={(value) => setSelectedRank(value)}
+                    value={selectedRank}
                 />
             </div>
 

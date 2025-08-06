@@ -10,9 +10,9 @@ export interface User {
   adress: string;
   phoneNumber: number;
   userScore?: number;
-  roles: string[]; // dérivé du backend .roles.map(role => role.name)
+  roles: string[];
   civilStatus: CivilStatus;
-  dateOfBirth: string; // ou Date selon ton usage
+  dateOfBirth: string;
   isEnabled?: boolean;
   isAccountBlocked?: boolean;
 }

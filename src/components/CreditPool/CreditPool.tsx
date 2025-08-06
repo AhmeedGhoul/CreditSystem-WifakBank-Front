@@ -1,17 +1,24 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { fetchCreditPools } from "@/api/creditPool";
+import { fetchUserContracts } from "@/api/contract";
+import { checkIfAccountExists } from "@/api/accountMoney";
 import { Button } from "@/components/ui/button";
 import Pagination from "@/components/UsersTable/Pagination";
 import Badge from "@/components/CreditPool/badge";
 import SignContract from "@/components/contract/signContract";
 import { parseJwt } from "@/lib/jwt";
-import {fetchUserContracts} from "@/api/contract";
+import { toast } from "sonner";
+import MissingAccountModal from "@/components/MissingAccountModal/MissingAccountModal";
+import GarentPopup from "@/components/garent/invite/page";
+import {checkIfUserHasGarent} from "@/api/garent";
+interface CreditPoolBrowserProps {
+    userHasAccess: boolean;
+}
 
-
-
-export default function CreditPoolBrowser() {
+export default function CreditPoolBrowser({ userHasAccess }: CreditPoolBrowserProps) {
     const [pools, setPools] = useState<CreditPool[]>([]);
     const [userContracts, setUserContracts] = useState<Contract[]>([]);
     const [userId, setUserId] = useState<number | null>(null);
@@ -20,7 +27,10 @@ export default function CreditPoolBrowser() {
     const [totalPages, setTotalPages] = useState<number>(1);
     const [selectedPool, setSelectedPool] = useState<CreditPool | null>(null);
     const [showContractModal, setShowContractModal] = useState(false);
+    const [showAccountForm, setShowAccountForm] = useState(false);
+    const [showMissingAccountModal, setShowMissingAccountModal] = useState(false);
 
+    const [showGarentPopup, setShowGarentPopup] = useState(false);
     const fetchContractsAndPools = async () => {
         const token = document.cookie
             .split("; ")
@@ -30,9 +40,7 @@ export default function CreditPoolBrowser() {
 
         const decoded = parseJwt(token);
         const uid = decoded?.sub;
-        if (!uid) {
-            return;
-        }
+        if (!uid) return;
         setUserId(uid);
 
         const params: Record<string, string> = {
@@ -56,12 +64,28 @@ export default function CreditPoolBrowser() {
         }
     };
 
-
     useEffect(() => {
         fetchContractsAndPools();
     }, [currentPage, isFullFilter]);
+    const router = useRouter();
 
-    const handleJoinClick = (pool: CreditPool) => {
+
+
+    const handleJoinClick = async (pool: CreditPool) => {
+        if (!userId) return;
+
+        const hasAccount = await checkIfAccountExists(userId);
+        if (!hasAccount) {
+            setShowMissingAccountModal(true);
+            return;
+        }
+
+        const hasGarent = await checkIfUserHasGarent();
+        if (!hasGarent) {
+            setShowGarentPopup(true);
+            return;
+        }
+
         setSelectedPool(pool);
         setShowContractModal(true);
     };
@@ -69,6 +93,7 @@ export default function CreditPoolBrowser() {
     const hasUserJoined = (poolId: number): boolean => {
         return userContracts.some(c => c.creditPoolId === poolId && c.userUserId === userId);
     };
+
     return (
         <div className="text-black dark:text-white max-w-7xl mx-auto">
             <div className="flex justify-end mb-4">
@@ -97,7 +122,7 @@ export default function CreditPoolBrowser() {
                         const steps = Math.floor(pool.Period / pool.Frequency);
                         const amountPerStep = steps > 0 ? pool.FinalValue / steps : 0;
                         const joined = hasUserJoined(pool.creditPoolId);
-                            console.log(joined);
+
                         return (
                             <div
                                 key={pool.creditPoolId}
@@ -120,10 +145,10 @@ export default function CreditPoolBrowser() {
 
                                 <Button
                                     className="mt-5 w-full font-medium tracking-wide"
-                                    disabled={pool.isFull || joined}
+                                    disabled={pool.isFull || joined || !userHasAccess}
                                     onClick={() => handleJoinClick(pool)}
                                 >
-                                    {pool.isFull ? "Unavailable (Full)" : joined ? "Already Joined" : "Join This Circle"}
+                                    {pool.isFull ? "Unavailable (Full)" : joined ? "Already Joined" :  !userHasAccess ? "Fill the Form to join" : "Join This Circle"}
                                 </Button>
                             </div>
                         );
@@ -143,14 +168,29 @@ export default function CreditPoolBrowser() {
                 <p className="text-gray-600 dark:text-gray-300 text-base sm:text-lg">
                     Didn’t find a circle that suits you?
                 </p>
+                
                 <a
-                    href="creditPool/create"
-                    className="inline-block mt-4 px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all font-semibold"
+                    href={userHasAccess ? "creditPool/create" : undefined}
+                    className={`inline-block mt-4 px-6 py-2 rounded-lg font-semibold transition-all
+        ${userHasAccess ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-gray-400 text-gray-200 cursor-not-allowed"}
+    `}
+                    onClick={(e) => {
+                        if (!userHasAccess) e.preventDefault();
+                    }}
                 >
                     Create Your Own Circle
                 </a>
-            </div>
 
+            </div>
+            <MissingAccountModal
+                isOpen={showMissingAccountModal}
+                onClose={() => setShowMissingAccountModal(false)}
+            />
+            <GarentPopup
+                isOpen={showGarentPopup}
+                onClose={() => setShowGarentPopup(false)}
+                onSuccess={() => fetchContractsAndPools()}
+            />
             {showContractModal && selectedPool && (
                 <SignContract
                     isOpen={showContractModal}
@@ -164,6 +204,7 @@ export default function CreditPoolBrowser() {
                     }}
                 />
             )}
+
         </div>
     );
 }

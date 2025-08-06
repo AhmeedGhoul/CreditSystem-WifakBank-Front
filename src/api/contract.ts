@@ -2,11 +2,13 @@ export async function createContract(payload: {
     contractDate: Date;
     creditPoolId: number,
     amount: number;
+    frequency:number;
     period: number;
+    rank:number
 }, file: File) {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL!;
     const formData = new FormData();
-    formData.append("dto", JSON.stringify(payload)); // dto now includes creditPoolId
+    formData.append("dto", JSON.stringify(payload));
     formData.append("file", file);
 
     const response = await fetch(`${baseUrl}/contract/add`, {
@@ -31,5 +33,17 @@ export async function fetchUserContracts(userId: number) {
         throw new Error("Failed to fetch user contracts");
     }
 
-    return response.json(); // [{ contractId, creditPoolId, userId }]
+    return response.json();
+}
+export async function fetchTakenRanks(creditPoolId: number): Promise<number[]> {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL!;
+    const response = await fetch(`${baseUrl}/contract/ranks/${creditPoolId}`, {
+        credentials: "include",
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to fetch taken ranks");
+    }
+
+    return await response.json();
 }
