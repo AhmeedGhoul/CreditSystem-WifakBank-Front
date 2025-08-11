@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
-import GridShape from "@/components/Common/GridShape";
+import GridShape from "@/components/common/GridShape";
 
 export const metadata: Metadata = {
   title: "Next.js Error 404 | TailAdmin - Next.js Dashboard Template",
