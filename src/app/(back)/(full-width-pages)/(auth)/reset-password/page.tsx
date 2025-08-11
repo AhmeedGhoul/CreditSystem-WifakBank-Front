@@ -6,7 +6,7 @@ import Link from 'next/link';
 
 import Input from '@/components/form/input/InputField';
 import Label from '@/components/form/Label';
-import Button from '@/components/ui/button/Button';
+import Button from '@/components/UI/button/Button';
 import { ChevronLeftIcon } from '@/icons';
 import {resetPassword} from "@/api/auth";
 

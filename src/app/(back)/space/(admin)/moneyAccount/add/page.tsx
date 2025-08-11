@@ -13,7 +13,7 @@ import { createAccount } from "@/api/accountMoney";
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import { stripePromise } from "@/lib/stripe";
-import { Button } from "@/components/ui/button";
+import {Button} from "@/components/ui/button";
 
 function AccountMoneyForm({ userId }: { userId: number }) {
     const stripe = useStripe();
