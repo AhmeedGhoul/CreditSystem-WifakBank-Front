@@ -1,21 +1,43 @@
 "use client";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LockIcon } from "lucide-react";
 import { checkUserAccess } from "@/api/user";
 import { parseJwt } from "@/lib/jwt";
 import MonthlyTarget from "@/components/ecommerce/MonthlyTarget";
-import MonthlySalesChart from "@/components/ecommerce/MonthlySalesChart";
+import MonthlySalesChart from "@/components/ecommerce/MonthlyPaymentsChart";
 import StatisticsChart from "@/components/ecommerce/StatisticsChart";
 import RecentOrders from "@/components/ecommerce/RecentOrders";
 import DemographicCard from "@/components/ecommerce/DemographicCard";
-import { EcommerceMetrics } from "@/components/ecommerce/EcommerceMetrics";
+import { UserMetrics } from "@/components/ecommerce/UserMetrics";
+import MonthlyPaymentsChart from "@/components/ecommerce/MonthlyPaymentsChart";
+import { fetchBalance } from "@/api/accountMoney";
+import { toast } from "sonner";
+import { BalanceOverview } from "@/components/AccountMoney/BalanceOverview";
+import {BalanceOverviewDashboard} from "@/components/AccountMoney/BalanceOverviewDashboard";
 
 export default function Ecommerce() {
     const [userHasAccess, setUserHasAccess] = useState<boolean | null>(null);
     const router = useRouter();
     const [isAgent, setIsAgent] = useState(false);
     const [isAuditor, setIsAuditor] = useState(false);
+
+    // Initialize currentBalance with 0
+    const [currentBalance, setCurrentBalance] = useState<number>(0);
+
+    // Fetch balance inside useEffect
+    useEffect(() => {
+        async function loadBalance() {
+            try {
+                const balance = await fetchBalance();
+                setCurrentBalance(balance ?? 0);
+            } catch (error) {
+                toast.error("Failed to load balance");
+                setCurrentBalance(0);
+            }
+        }
+        loadBalance();
+    }, []);
 
     useEffect(() => {
         const fetchAccess = async () => {
@@ -36,15 +58,9 @@ export default function Ecommerce() {
                         const isAuditorRole = roles.includes("Auditor");
                         const isAdminRole = roles.includes("Admin");
 
-                        // ✅ Set individual states
                         setIsAgent(isAgentRole);
                         setIsAuditor(isAuditorRole);
 
-                        // ✅ Log real values
-                        console.log("Agent:", isAgentRole);
-                        console.log("Auditor:", isAuditorRole);
-
-                        // ✅ Access control
                         const accessGrantedByRequest = await checkUserAccess();
                         const isOnlyClient = roles.length === 1 && roles.includes("Client");
 
@@ -56,7 +72,6 @@ export default function Ecommerce() {
                     }
                 }
 
-                // No token or roles → access denied
                 setUserHasAccess(false);
             } catch (error) {
                 console.error("Error checking access:", error);
@@ -69,29 +84,22 @@ export default function Ecommerce() {
 
     if (userHasAccess === null) return null; // or loading spinner
 
-
     return (
         <div className="relative">
             <div
-                className={`grid grid-cols-12 gap-4 md:gap-6 ${ 
+                className={`grid grid-cols-12 gap-4 md:gap-6 ${
                     !userHasAccess ? "blur-sm opacity-40 pointer-events-none" : ""
                 }`}
             >
                 <div className="col-span-12 space-y-6 xl:col-span-7">
-                    <EcommerceMetrics />
-                    <MonthlySalesChart />
+                    <UserMetrics />
+                    <MonthlyPaymentsChart />
                 </div>
                 <div className="col-span-12 xl:col-span-5">
-                    <MonthlyTarget />
+                    <BalanceOverviewDashboard balance={currentBalance} />
                 </div>
                 <div className="col-span-12">
                     <StatisticsChart />
-                </div>
-                <div className="col-span-12 xl:col-span-5">
-                    <DemographicCard />
-                </div>
-                <div className="col-span-12 xl:col-span-7">
-                    <RecentOrders />
                 </div>
             </div>
 

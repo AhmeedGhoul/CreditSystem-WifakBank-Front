@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { fetchCreditPools } from "@/api/creditPool";
+import { fetchCreditPools, fetchRecommendedCreditPools } from "@/api/creditPool";
 import { fetchUserContracts } from "@/api/contract";
 import { checkIfAccountExists } from "@/api/accountMoney";
 import { Button } from "@/components/ui/button";
@@ -13,13 +13,15 @@ import { parseJwt } from "@/lib/jwt";
 import { toast } from "sonner";
 import MissingAccountModal from "@/components/MissingAccountModal/MissingAccountModal";
 import GarentPopup from "@/components/garent/invite/page";
-import {checkIfUserHasGarent} from "@/api/garent";
+import { checkIfUserHasGarent } from "@/api/garent";
+
 interface CreditPoolBrowserProps {
     userHasAccess: boolean;
 }
 
 export default function CreditPoolBrowser({ userHasAccess }: CreditPoolBrowserProps) {
     const [pools, setPools] = useState<CreditPool[]>([]);
+    const [recommendedPools, setRecommendedPools] = useState<CreditPool[]>([]);
     const [userContracts, setUserContracts] = useState<Contract[]>([]);
     const [userId, setUserId] = useState<number | null>(null);
     const [isFullFilter, setIsFullFilter] = useState<boolean | "">("");
@@ -29,8 +31,8 @@ export default function CreditPoolBrowser({ userHasAccess }: CreditPoolBrowserPr
     const [showContractModal, setShowContractModal] = useState(false);
     const [showAccountForm, setShowAccountForm] = useState(false);
     const [showMissingAccountModal, setShowMissingAccountModal] = useState(false);
-
     const [showGarentPopup, setShowGarentPopup] = useState(false);
+
     const fetchContractsAndPools = async () => {
         const token = document.cookie
             .split("; ")
@@ -64,12 +66,29 @@ export default function CreditPoolBrowser({ userHasAccess }: CreditPoolBrowserPr
         }
     };
 
+    const fetchRecommendedPools = async () => {
+        try {
+            const recs = await fetchRecommendedCreditPools();
+            setRecommendedPools(recs.recommended); // <-- Use the inner array, not the whole object
+        } catch (error) {
+            console.error("Failed to fetch recommended pools:", error);
+        }
+    };
+
+
+
     useEffect(() => {
         fetchContractsAndPools();
     }, [currentPage, isFullFilter]);
+
+    // Fetch recommended pools once userId is set
+    useEffect(() => {
+        if (userId) {
+            fetchRecommendedPools();
+        }
+    }, [userId]);
+
     const router = useRouter();
-
-
 
     const handleJoinClick = async (pool: CreditPool) => {
         if (!userId) return;
@@ -96,7 +115,53 @@ export default function CreditPoolBrowser({ userHasAccess }: CreditPoolBrowserPr
 
     return (
         <div className="text-black dark:text-white max-w-7xl mx-auto">
-            <div className="flex justify-end mb-4">
+
+            {recommendedPools.length > 0 && (
+                <>
+                    <h1 className="text-2xl font-bold mb-4">Recommended Credit Circles for You</h1>
+                    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 justify-items-center mb-10">
+                        {recommendedPools.map((pool) => {
+                            const steps = Math.floor(pool.Period / pool.Frequency);
+                            const amountPerStep = steps > 0 ? pool.FinalValue / steps : 0;
+                            const joined = hasUserJoined(pool.creditPoolId);
+
+                            return (
+                                <div
+                                    key={pool.creditPoolId}
+                                    className="group bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-5 shadow-md hover:shadow-xl transition-all w-full max-w-sm"
+                                >
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h2 className="text-lg font-bold text-brand-600 dark:text-brand-400">
+                                            Circle #{pool.creditPoolId}
+                                        </h2>
+                                        <Badge variant={pool.isFull || joined ? "destructive" : "success"}>
+                                            {pool.isFull ? "Full" : joined ? "Already Joined" : "Open"}
+                                        </Badge>
+                                    </div>
+
+                                    <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                                        <div><span className="font-semibold">Period:</span> {pool.Period} months</div>
+                                        <div><span className="font-semibold">Final Amount:</span> {pool.FinalValue} DT</div>
+                                        <div><span className="font-semibold">You pay:</span> {amountPerStep.toFixed(2)} DT every {pool.Frequency} month(s)</div>
+                                    </div>
+
+                                    <Button
+                                        className="mt-5 w-full font-medium tracking-wide"
+                                        disabled={pool.isFull || joined || !userHasAccess}
+                                        onClick={() => handleJoinClick(pool)}
+                                    >
+                                        {pool.isFull ? "Unavailable (Full)" : joined ? "Already Joined" : !userHasAccess ? "Fill the Form to join" : "Join This Circle"}
+                                    </Button>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </>
+            )}
+
+            {/* === EXISTING CREDIT POOLS SECTION === */}
+            <div className="flex items-center justify-between mb-4">
+                <h1 className="text-2xl font-bold">All the Credit Circles</h1>
                 <select
                     value={String(isFullFilter)}
                     onChange={(e) => {
@@ -148,7 +213,7 @@ export default function CreditPoolBrowser({ userHasAccess }: CreditPoolBrowserPr
                                     disabled={pool.isFull || joined || !userHasAccess}
                                     onClick={() => handleJoinClick(pool)}
                                 >
-                                    {pool.isFull ? "Unavailable (Full)" : joined ? "Already Joined" :  !userHasAccess ? "Fill the Form to join" : "Join This Circle"}
+                                    {pool.isFull ? "Unavailable (Full)" : joined ? "Already Joined" : !userHasAccess ? "Fill the Form to join" : "Join This Circle"}
                                 </Button>
                             </div>
                         );
@@ -168,20 +233,19 @@ export default function CreditPoolBrowser({ userHasAccess }: CreditPoolBrowserPr
                 <p className="text-gray-600 dark:text-gray-300 text-base sm:text-lg">
                     Didn’t find a circle that suits you?
                 </p>
-                
+
                 <a
                     href={userHasAccess ? "creditPool/create" : undefined}
                     className={`inline-block mt-4 px-6 py-2 rounded-lg font-semibold transition-all
-        ${userHasAccess ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-gray-400 text-gray-200 cursor-not-allowed"}
-    `}
+            ${userHasAccess ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-gray-400 text-gray-200 cursor-not-allowed"}`}
                     onClick={(e) => {
                         if (!userHasAccess) e.preventDefault();
                     }}
                 >
                     Create Your Own Circle
                 </a>
-
             </div>
+
             <MissingAccountModal
                 isOpen={showMissingAccountModal}
                 onClose={() => setShowMissingAccountModal(false)}
@@ -199,12 +263,8 @@ export default function CreditPoolBrowser({ userHasAccess }: CreditPoolBrowserPr
                     frequency={selectedPool.Frequency}
                     period={selectedPool.Period}
                     finalValue={selectedPool.FinalValue}
-                    onSubmitContract={(signatureData) => {
-                        console.log("Signature:", signatureData);
-                    }}
                 />
             )}
-
         </div>
     );
 }

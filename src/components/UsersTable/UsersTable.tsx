@@ -95,8 +95,6 @@ export default function UsersTable() {
   };
 
   const handleDelete = async (userId: number) => {
-    const confirmed = window.confirm("Are you sure you want to delete this user?");
-    if (!confirmed) return;
     try {
       await deleteUser(userId);
       reloadUsers();
@@ -118,8 +116,11 @@ export default function UsersTable() {
 
   const confirmEdit = async () => {
     if (!editingUserId) return;
+
+    const { roles, ...dataWithoutRoles } = editValues;
+
     try {
-      await modifyUser(editingUserId, editValues);
+      await modifyUser(editingUserId, dataWithoutRoles);
       setEditingUserId(null);
       setEditValues({});
       reloadUsers();

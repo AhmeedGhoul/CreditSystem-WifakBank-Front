@@ -114,5 +114,39 @@ export async function fetchCurrentUser(): Promise<User | null> {
     const data = await res.json();
     return data.hasAccess || null;
 }
+export interface UserStats {
+    totalUsers: number;
+    activeUsersLastMonth: number;
+    totalContracts: number;
+    totalContractAmount: number;
+}
 
+export async function fetchUserStats(): Promise<UserStats> {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/stats`); // Adjust path if needed
+    if (!res.ok) {
+        throw new Error('Failed to fetch user stats');
+    }
+    return res.json();
+}
+export async function fetchMonthlyPayments() {
+    const token = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("access_token="))
+        ?.split("=")[1];
+
+    if (!token) return null;
+
+    const decoded = parseJwt(token);
+    const uid = decoded?.sub;
+
+    if (!uid) return null;
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/monthly-payments`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+        credentials: "include",
+    });
+    if (!res.ok) throw new Error('Failed to fetch monthly payments');
+    return res.json() as Promise<number[]>;
+}
 

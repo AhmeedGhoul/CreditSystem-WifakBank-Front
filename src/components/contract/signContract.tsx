@@ -1,13 +1,14 @@
 "use client";
+
 import React, { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import html2canvas from "html2canvas-pro";
 import jsPDF from "jspdf";
 import { createContract, fetchTakenRanks } from "@/api/contract";
 import Label from "@/components/form/Label";
-import Input from "@/components/form/input/InputField";
 import Select from "@/components/form/Select";
 
 const SignatureCanvas = dynamic(() => import("react-signature-canvas"), { ssr: false }) as any;
@@ -19,7 +20,6 @@ type Props = {
     frequency: number;
     period: number;
     finalValue: number;
-    onSubmitContract?: (signatureData: any) => void;
 };
 
 export default function SignContractModal({
@@ -32,12 +32,16 @@ export default function SignContractModal({
                                           }: Props) {
     const scrollRef = useRef<HTMLDivElement>(null);
     const signatureRef = useRef<any>(null);
+    const router = useRouter();
+
     const [isGenerating, setIsGenerating] = useState(false);
     const [takenRanks, setTakenRanks] = useState<number[]>([]);
     const [selectedRank, setSelectedRank] = useState<string>("0");
     const [availableRanks, setAvailableRanks] = useState<{ label: string; value: string }[]>([]);
+    const [successMessage, setSuccessMessage] = useState<string>("");
+
     const steps = Math.floor(period / frequency);
-    const basePayment = finalValue  / steps;
+    const basePayment = finalValue / steps;
     const totalProfit = finalValue * 0.005;
     const mid = Math.ceil(steps / 2);
 
@@ -58,18 +62,20 @@ export default function SignContractModal({
                     }
                 }
                 setAvailableRanks(options);
+                // Reset selected rank when modal opens
+                setSelectedRank("0");
+                setSuccessMessage("");
             });
         }
     }, [isOpen, creditPoolId, steps]);
 
-
     const handleGenerateContract = async () => {
         if (!signatureRef.current || signatureRef.current.isEmpty()) {
-            alert("Please sign before submitting.");
             return;
         }
 
         setIsGenerating(true);
+        setSuccessMessage("");
 
         try {
             const canvas = await html2canvas(scrollRef.current!, {
@@ -102,8 +108,8 @@ export default function SignContractModal({
             await createContract(
                 {
                     contractDate: new Date(),
-                    amount: finalPayment *(period / frequency),
-                    creditPoolId: creditPoolId,
+                    amount: finalPayment * (period / frequency),
+                    creditPoolId,
                     period,
                     frequency,
                     rank: parseInt(selectedRank),
@@ -111,14 +117,18 @@ export default function SignContractModal({
                 file
             );
 
-            alert("✅ Contract submitted successfully.");
-            onClose();
-        } catch (error) {
-            console.error("❌ Contract error:", error);
-            alert("Error submitting contract.");
-        }
+            setSuccessMessage("Contract submitted successfully!");
 
-        setIsGenerating(false);
+            setTimeout(() => {
+                setIsGenerating(false);
+                onClose();
+                router.push("/space/creditPool/myCreditPools");
+            }, 1500);
+        } catch (error) {
+            console.error("Contract error:", error);
+            // Optionally handle error UI here if needed
+            setIsGenerating(false);
+        }
     };
 
     return (
@@ -167,15 +177,15 @@ export default function SignContractModal({
           </span>{" "}
                     every {frequency} month(s), over {period} months.
                 </p>
-                    {selectedRank !== "0" && (
-                        <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
-                            Based on your selected rank <strong>({selectedRank})</strong>,{" "}
-                            {adjustment > 0
-                                ? `you benefit from a bonus of +${adjustment.toFixed(2)} DT`
-                                : `you contribute an additional ${Math.abs(adjustment).toFixed(2)} DT`}{" "}
-                            to balance the system and ensure fairness.
-                        </p>
-                    )}
+                {selectedRank !== "0" && (
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
+                        Based on your selected rank <strong>({selectedRank})</strong>,{" "}
+                        {adjustment > 0
+                            ? `you benefit from a bonus of +${adjustment.toFixed(2)} DT`
+                            : `you contribute an additional ${Math.abs(adjustment).toFixed(2)} DT`}{" "}
+                        to balance the system and ensure fairness.
+                    </p>
+                )}
             </div>
 
             <p className="mt-4 text-sm text-gray-600 dark:text-gray-300">Please sign below:</p>
@@ -197,8 +207,14 @@ export default function SignContractModal({
                 />
             </div>
 
+            {successMessage && (
+                <div className="p-3 mb-4 rounded bg-green-100 text-green-800 text-center font-semibold">
+                    {successMessage}
+                </div>
+            )}
+
             <div className="flex justify-end space-x-4 pt-2">
-                <Button variant="destructive" onClick={() => signatureRef.current?.clear()}>
+                <Button variant="destructive" onClick={() => signatureRef.current?.clear()} disabled={isGenerating}>
                     Clear
                 </Button>
                 <Button onClick={handleGenerateContract} disabled={isGenerating}>

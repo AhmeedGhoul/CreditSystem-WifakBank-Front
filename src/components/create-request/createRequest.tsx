@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import Label from "@/components/form/Label";
 import Input from "@/components/form/input/InputField";
 import TextArea from "@/components/form/input/TextArea";
@@ -11,6 +12,8 @@ import { createRequest } from "@/api/request";
 import { Employment } from "@/interface/request";
 
 export default function SubmitRequestForm() {
+    const router = useRouter();
+
     const [formData, setFormData] = useState({
         purpose: "",
         monthlyIncome: "",
@@ -31,6 +34,10 @@ export default function SubmitRequestForm() {
     });
 
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
 
     const employmentOptions = [
         { value: "Employed", label: "Employed" },
@@ -55,7 +62,28 @@ export default function SubmitRequestForm() {
         },
     });
 
+    const validateForm = () => {
+        // Example: purpose, monthlyIncome, employmentStatus, yearsOfEmployment are required
+        if (!formData.purpose.trim()) return "Purpose is required";
+        if (!formData.monthlyIncome || isNaN(Number(formData.monthlyIncome))) return "Valid monthly income is required";
+        if (!formData.employmentStatus) return "Employment status is required";
+        if (!formData.yearsOfEmployment || isNaN(Number(formData.yearsOfEmployment))) return "Valid years of employment is required";
+        // Add more validation if needed
+        return null;
+    };
+
     const handleSubmit = async () => {
+        const validationError = validateForm();
+        if (validationError) {
+            setErrorMessage(validationError);
+            setSuccessMessage(null);
+            return;
+        }
+
+        setLoading(true);
+        setErrorMessage(null);
+        setSuccessMessage(null);
+
         try {
             const payload = {
                 purpose: formData.purpose,
@@ -63,16 +91,16 @@ export default function SubmitRequestForm() {
                 employmentStatus: formData.employmentStatus as Employment,
                 yearsOfEmployment: parseInt(formData.yearsOfEmployment),
                 existingLoans: formData.existingLoans,
-                numberOfCars: parseInt(formData.numberOfCars),
-                numberOfHouses: parseInt(formData.numberOfHouses),
+                numberOfCars: parseInt(formData.numberOfCars) || 0,
+                numberOfHouses: parseInt(formData.numberOfHouses) || 0,
                 hasCriminalRecord: formData.hasCriminalRecord,
                 otherAssets: formData.additionalInfo,
                 otherIncomeSources: formData.otherIncomeSources,
-                totalLoanAmount: parseFloat(formData.totalLoanAmount),
-                monthlyLoanPayments: parseFloat(formData.monthlyLoanPayments),
-                estimatedHouseValue: parseFloat(formData.estimatedHouseValue),
-                estimatedCarValue: parseFloat(formData.estimatedCarValue),
-                bankSavings: parseFloat(formData.bankSavings),
+                totalLoanAmount: parseFloat(formData.totalLoanAmount) || 0,
+                monthlyLoanPayments: parseFloat(formData.monthlyLoanPayments) || 0,
+                estimatedHouseValue: parseFloat(formData.estimatedHouseValue) || 0,
+                estimatedCarValue: parseFloat(formData.estimatedCarValue) || 0,
+                bankSavings: parseFloat(formData.bankSavings) || 0,
                 documents: uploadedFiles.map((file) => ({
                     documentDate: new Date(),
                     originalName: file.name,
@@ -82,16 +110,25 @@ export default function SubmitRequestForm() {
                 })),
             };
 
-            const result = await createRequest(payload, uploadedFiles[0]);
-            console.log("✅", result);
+            await createRequest(payload, uploadedFiles[0]);
+            setSuccessMessage("Request submitted successfully! Redirecting...");
+            setErrorMessage(null);
+
+            setTimeout(() => {
+                router.push("/space/");
+            }, 1500);
         } catch (error) {
-            console.error("❌", error);
+            setErrorMessage("Failed to submit request.");
+            setSuccessMessage(null);
+            console.error(error);
+        } finally {
+            setLoading(false);
         }
     };
 
-
     return (
         <div className="space-y-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* All your inputs... */}
             <div className="md:col-span-2">
                 <Label>Purpose of Request</Label>
                 <Input
@@ -228,6 +265,9 @@ export default function SubmitRequestForm() {
                 />
             </div>
 
+
+
+            {/* Upload section */}
             <div className="md:col-span-2">
                 <Label>Upload Supporting Documents</Label>
                 <div
@@ -252,13 +292,21 @@ export default function SubmitRequestForm() {
                 </div>
             </div>
 
+            {/* Success and error messages */}
+            <div className="md:col-span-2">
+                {successMessage && <div className="text-green-600 font-semibold">{successMessage}</div>}
+                {errorMessage && <div className="text-red-600 font-semibold">{errorMessage}</div>}
+            </div>
+
+            {/* Submit button */}
             <div className="md:col-span-2">
                 <button
                     type="button"
-                    className="px-6 py-3 rounded-xl bg-brand-600 text-white hover:bg-brand-700 transition shadow"
+                    className="px-6 py-3 rounded-xl bg-brand-600 text-white hover:bg-brand-700 transition shadow disabled:opacity-50"
                     onClick={handleSubmit}
+                    disabled={loading}
                 >
-                    Submit Request
+                    {loading ? "Submitting..." : "Submit Request"}
                 </button>
             </div>
         </div>

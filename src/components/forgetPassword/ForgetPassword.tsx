@@ -13,12 +13,24 @@ export default function PasswordResetRequest() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
+    // Basic email format validation
+    const validateEmail = (email: string) => {
+        const emailRegex =
+            /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
         setSuccessMessage("");
-        setLoading(true);
 
+        if (!validateEmail(email)) {
+            setError("Please enter a valid email address.");
+            return;
+        }
+
+        setLoading(true);
         try {
             await requestPasswordReset(email);
             setSuccessMessage("An email has been sent to your inbox.");
@@ -49,25 +61,37 @@ export default function PasswordResetRequest() {
                         Enter your email and we’ll send you a password reset link.
                     </p>
 
-                    <form onSubmit={handleSubmit}>
+                    <form onSubmit={handleSubmit} noValidate>
                         <div className="space-y-6">
                             <div>
-                                <Label>Email</Label>
+                                <Label htmlFor="email">Email</Label>
                                 <Input
+                                    id="email"
                                     type="email"
                                     placeholder="you@example.com"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
+                                    aria-invalid={!!error}
+                                    aria-describedby="email-error"
                                 />
                             </div>
 
                             {error && (
-                                <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
+                                <div
+                                    id="email-error"
+                                    className="text-sm text-red-600 dark:text-red-400"
+                                    role="alert"
+                                >
+                                    {error}
+                                </div>
                             )}
 
                             {successMessage && (
-                                <div className="text-sm text-green-600 dark:text-green-400">
+                                <div
+                                    className="text-sm text-green-600 dark:text-green-400"
+                                    role="alert"
+                                >
                                     {successMessage}
                                 </div>
                             )}

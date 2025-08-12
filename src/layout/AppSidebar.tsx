@@ -1,9 +1,10 @@
 "use client";
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useSidebar } from "@/context/SidebarContext";
+import { useLoading } from "@/context/LoadingContext"; // <--- import loading context
+
 import {
   BoxCubeIcon,
   CalenderIcon,
@@ -18,6 +19,7 @@ import {
   PaperPlaneIcon,
   UserCircleIcon,
 } from "../icons/index";
+
 import { parseJwt } from "@/lib/jwt";
 import { checkUserAccess } from "@/api/user";
 
@@ -55,13 +57,13 @@ const navItems: NavItem[] = [
     name: "Garent",
     icon: <LockIcon />,
     path: "/space/garent",
-    allowedRoles: ["Admin","Agent","Client"],
+    allowedRoles: ["Admin", "Agent", "Client"],
   },
   {
     name: "Request",
     icon: <PaperPlaneIcon />,
     path: "/space/request",
-    allowedRoles: ["Admin","Agent","Auditor"],
+    allowedRoles: ["Admin", "Agent", "Auditor"],
   },
   {
     name: "User",
@@ -75,13 +77,14 @@ const navItems: NavItem[] = [
     path: "/space/activities",
     allowedRoles: ["Admin", "Auditor"],
   },
-
 ];
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
   const router = useRouter();
+  const { setLoading } = useLoading(); // <-- get setLoading from context
+
   const [userRoles, setUserRoles] = useState<string[]>([]);
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [isAgent, setIsAgent] = useState(false);
@@ -130,6 +133,7 @@ const AppSidebar: React.FC = () => {
 
     fetchAccess();
   }, []);
+
   const hasRole = useCallback(
       (roles?: string[]) => {
         if (!roles) return true;
@@ -176,14 +180,20 @@ const AppSidebar: React.FC = () => {
     setOpenSubmenu((prev) => (prev?.index === index ? null : { type: "main", index }));
   };
 
-  const isAdmin = userRoles.includes("Admin");
+  // Navigation click handler to set loading + navigate
+  const handleNavigate = async (path: string) => {
+    setLoading(true);
+    await router.push(path);
+    // Optional delay to avoid flicker:
+    setTimeout(() => setLoading(false), 300);
+  };
 
   const renderMenuItems = (items: NavItem[]) => (
       <ul className="flex flex-col gap-4">
         {hasAccess === false && (isAgent || isAuditor || userRoles.includes("Client")) && (
             <li>
               <button
-                  onClick={() => router.push("/space/request/submitRequest")}
+                  onClick={() => handleNavigate("/space/request/submitRequest")}
                   className="w-full flex items-center gap-2 text-white bg-brand-600 hover:bg-brand-700 transition px-4 py-2 rounded-lg text-sm"
               >
                 <PaperPlaneIcon className="w-4 h-4" />
@@ -209,9 +219,7 @@ const AppSidebar: React.FC = () => {
                 >
                   {nav.icon}
                 </span>
-                      {(isExpanded || isHovered || isMobileOpen) && (
-                          <span className="menu-item-text">{nav.name}</span>
-                      )}
+                      {(isExpanded || isHovered || isMobileOpen) && <span className="menu-item-text">{nav.name}</span>}
                       {(isExpanded || isHovered || isMobileOpen) && (
                           <ChevronDownIcon
                               className={`ml-auto w-5 h-5 transition-transform duration-200 ${
@@ -230,10 +238,13 @@ const AppSidebar: React.FC = () => {
                         }}
                     >
                       <ul className="mt-2 space-y-1 ml-9">
-                        {(userRoles.length === 0 ? nav.subItems : nav.subItems.filter((subItem) => hasRole(subItem.allowedRoles))).map((subItem) => (
+                        {(userRoles.length === 0
+                                ? nav.subItems
+                                : nav.subItems.filter((subItem) => hasRole(subItem.allowedRoles))
+                        ).map((subItem) => (
                             <li key={subItem.name}>
-                              <Link
-                                  href={subItem.path}
+                              <button
+                                  onClick={() => handleNavigate(subItem.path)}
                                   className={`menu-dropdown-item ${
                                       isActive(subItem.path)
                                           ? "menu-dropdown-item-active"
@@ -265,7 +276,7 @@ const AppSidebar: React.FC = () => {
                             </span>
                                   )}
                         </span>
-                              </Link>
+                              </button>
                             </li>
                         ))}
                       </ul>
@@ -273,8 +284,8 @@ const AppSidebar: React.FC = () => {
                   </>
               ) : (
                   nav.path && (
-                      <Link
-                          href={nav.path}
+                      <button
+                          onClick={() => handleNavigate(nav.path!)}
                           className={`menu-item group ${
                               isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
                           }`}
@@ -286,10 +297,8 @@ const AppSidebar: React.FC = () => {
                 >
                   {nav.icon}
                 </span>
-                        {(isExpanded || isHovered || isMobileOpen) && (
-                            <span className="menu-item-text">{nav.name}</span>
-                        )}
-                      </Link>
+                        {(isExpanded || isHovered || isMobileOpen) && <span className="menu-item-text">{nav.name}</span>}
+                      </button>
                   )
               )}
             </li>
@@ -311,7 +320,7 @@ const AppSidebar: React.FC = () => {
       >
         <div className={`py-8 flex ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"}`}>
           <div className="flex justify-center items-center w-full">
-            <Link href="/">
+            <a href="/">
               {isExpanded || isHovered || isMobileOpen ? (
                   <>
                     <Image className="dark:hidden" src="/images/logo/logo.svg" alt="Logo" width={150} height={40} />
@@ -320,7 +329,7 @@ const AppSidebar: React.FC = () => {
               ) : (
                   <Image src="/images/logo/logos.svg" alt="Logo" width={32} height={32} />
               )}
-            </Link>
+            </a>
           </div>
         </div>
 

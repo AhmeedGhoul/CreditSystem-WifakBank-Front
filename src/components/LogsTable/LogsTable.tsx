@@ -30,7 +30,6 @@ export default function LogsTable() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
-
     const [audits, setAudits] = useState<any[]>([]);
     const [auditPage, setAuditPage] = useState(1);
     const [auditTotalPages, setAuditTotalPages] = useState(1);
@@ -42,7 +41,9 @@ export default function LogsTable() {
     const [startDateAudit, setStartDateAudit] = useState<Date | undefined>();
     const [endDateAudit, setEndDateAudit] = useState<Date | undefined>();
     const [disableCreateAudit, setDisabledwCreateAudit] = useState(false);
-
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
     const reloadLogs = () => {
         setIsLoading(true);
         const params: Record<string, string> = {
@@ -156,7 +157,21 @@ export default function LogsTable() {
         auditType: AuditType.Finacial,
     });
     const handleCreateAudit = async () => {
+        if (
+            !createAuditData.auditOutput ||
+            !createAuditData.auditStatus ||
+            !createAuditData.auditType
+        ) {
+            setErrorMessage("Please fill all fields");
+            setSuccessMessage(null);
+            return;
+        }
+
+        setLoading(true);
+        setSuccessMessage(null);
+        setErrorMessage(null);
         try {
+
             await createAudit({
                 ...createAuditData,
                 activityLogIds: selectedLogs,
@@ -453,8 +468,12 @@ export default function LogsTable() {
                             .filter((log) => selectedLogs.includes(log.activityLogId))
                             .map((log) => (
                                 <div key={log.activityLogId} className="text-sm border p-2 rounded">
-                                    <div><strong>Name:</strong> {log.activityLogName}</div>
-                                    <div><strong>Date:</strong> {new Date(log.activityDate).toLocaleString()}</div>
+                                    <div>
+                                        <strong>Name:</strong> {log.activityLogName}
+                                    </div>
+                                    <div>
+                                        <strong>Date:</strong> {new Date(log.activityDate).toLocaleString()}
+                                    </div>
                                 </div>
                             ))}
                     </div>
@@ -500,11 +519,20 @@ export default function LogsTable() {
                             <option value="compliance">Compliance</option>
                             <option value="Risk">Risk</option>
                         </select>
+
+                        {/* Success and error messages */}
+                        {successMessage && (
+                            <div className="text-green-600 font-semibold mt-2">{successMessage}</div>
+                        )}
+                        {errorMessage && (
+                            <div className="text-red-600 font-semibold mt-2">{errorMessage}</div>
+                        )}
                     </div>
 
-
                     <DialogFooter>
-                        <Button onClick={handleCreateAudit}>Create</Button>
+                        <Button onClick={handleCreateAudit} disabled={loading}>
+                            {loading ? "Creating..." : "Create"}
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

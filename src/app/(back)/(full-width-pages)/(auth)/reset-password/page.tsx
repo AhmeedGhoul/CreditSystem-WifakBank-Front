@@ -6,9 +6,9 @@ import Link from 'next/link';
 
 import Input from '@/components/form/input/InputField';
 import Label from '@/components/form/Label';
-import Button from '@/components/UI/button/Button';
+import Button from '@/components/ui/button/Button';
 import { ChevronLeftIcon } from '@/icons';
-import {resetPassword} from "@/api/auth";
+import { resetPassword } from '@/api/auth';
 
 export default function ResetPasswordPage() {
     const searchParams = useSearchParams();
@@ -20,6 +20,13 @@ export default function ResetPasswordPage() {
     const [successMessage, setSuccessMessage] = useState('');
     const [loading, setLoading] = useState(false);
 
+    // Basic password strength check
+    const validatePassword = (pwd: string) => {
+        if (pwd.length < 6) return 'Password must be at least 6 characters.';
+        // Add more rules if needed: uppercase, numbers, symbols...
+        return '';
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
@@ -27,6 +34,12 @@ export default function ResetPasswordPage() {
 
         if (!token) {
             setError('Missing or invalid token.');
+            return;
+        }
+
+        const pwdError = validatePassword(password);
+        if (pwdError) {
+            setError(pwdError);
             return;
         }
 
@@ -38,7 +51,7 @@ export default function ResetPasswordPage() {
         setLoading(true);
         try {
             const res = await resetPassword({ password, token });
-            setSuccessMessage(res.message);
+            setSuccessMessage(res.message || 'Password reset successful!');
         } catch (err: any) {
             setError(err.message || 'Something went wrong.');
         } finally {
@@ -67,36 +80,51 @@ export default function ResetPasswordPage() {
                         Enter and confirm your new password below.
                     </p>
 
-                    <form onSubmit={handleSubmit}>
+                    <form onSubmit={handleSubmit} noValidate>
                         <div className="space-y-6">
                             <div>
-                                <Label>New Password</Label>
+                                <Label htmlFor="password">New Password</Label>
                                 <Input
+                                    id="password"
                                     type="password"
                                     placeholder="Enter new password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
+                                    aria-invalid={!!error && (error.includes('Password') || error.includes('match'))}
+                                    aria-describedby="password-error"
                                 />
                             </div>
 
                             <div>
-                                <Label>Confirm Password</Label>
+                                <Label htmlFor="confirmPassword">Confirm Password</Label>
                                 <Input
+                                    id="confirmPassword"
                                     type="password"
                                     placeholder="Confirm new password"
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
                                     required
+                                    aria-invalid={!!error && error.includes('match')}
+                                    aria-describedby="confirm-password-error"
                                 />
                             </div>
 
                             {error && (
-                                <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
+                                <div
+                                    id="password-error"
+                                    className="text-sm text-red-600 dark:text-red-400"
+                                    role="alert"
+                                >
+                                    {error}
+                                </div>
                             )}
 
                             {successMessage && (
-                                <div className="text-sm text-green-600 dark:text-green-400">
+                                <div
+                                    className="text-sm text-green-600 dark:text-green-400"
+                                    role="alert"
+                                >
                                     {successMessage}
                                 </div>
                             )}

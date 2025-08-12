@@ -86,3 +86,14 @@ export async function sendReplacementRequest(
     return response.json();
 }
 
+export async function fetchRecommendedCreditPools() {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ml/recommend`, {
+        credentials: "include",
+    });
+
+    if (!res.ok) {
+        throw new Error("Failed to fetch recommended credit pools");
+    }
+
+    return res.json();
+}

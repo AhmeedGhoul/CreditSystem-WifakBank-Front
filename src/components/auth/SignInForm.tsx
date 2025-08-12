@@ -14,24 +14,53 @@ export default function SignInForm() {
   const [isChecked, setIsChecked] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [formErrors, setFormErrors] = useState<{ email?: string; password?: string }>({});
+  const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  // Email validation regex (simple)
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const validateInputs = () => {
+    const errors: { email?: string; password?: string } = {};
+
+    if (!email) {
+      errors.email = "Email is required.";
+    } else if (email.length > 255) {
+      errors.email = "Email must be less than 256 characters.";
+    } else if (!emailRegex.test(email)) {
+      errors.email = "Please enter a valid email address.";
+    }
+
+    if (!password) {
+      errors.password = "Password is required.";
+    } else if (password.length < 6) {
+      errors.password = "Password must be at least 6 characters.";
+    } else if (password.length > 255) {
+      errors.password = "Password must be less than 256 characters.";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
+    setServerError("");
+    if (!validateInputs()) return;
 
+    setLoading(true);
     try {
       await loginUser({ email, password, keepMeLoggedIn: isChecked });
       router.push("/space");
     } catch (err: any) {
-      setError(err.message || "Login failed");
+      setServerError(err.message || "Login failed");
     } finally {
       setLoading(false);
     }
   };
+
   return (
       <div className="flex flex-col flex-1 lg:w-1/2 w-full">
         <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
@@ -54,11 +83,8 @@ export default function SignInForm() {
               </p>
             </div>
 
-
-
-
             {/* FORM */}
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} noValidate>
               <div className="space-y-6">
                 <div>
                   <Label>
@@ -70,7 +96,15 @@ export default function SignInForm() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
+                      maxLength={255}
+                      aria-invalid={!!formErrors.email}
+                      aria-describedby="email-error"
                   />
+                  {formErrors.email && (
+                      <p id="email-error" className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {formErrors.email}
+                      </p>
+                  )}
                 </div>
 
                 <div>
@@ -84,6 +118,10 @@ export default function SignInForm() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
+                        minLength={6}
+                        maxLength={255}
+                        aria-invalid={!!formErrors.password}
+                        aria-describedby="password-error"
                     />
                     <span
                         onClick={() => setShowPassword(!showPassword)}
@@ -96,6 +134,11 @@ export default function SignInForm() {
                     )}
                   </span>
                   </div>
+                  {formErrors.password && (
+                      <p id="password-error" className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {formErrors.password}
+                      </p>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between">
@@ -113,8 +156,8 @@ export default function SignInForm() {
                   </Link>
                 </div>
 
-                {error && (
-                    <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
+                {serverError && (
+                    <div className="text-sm text-red-600 dark:text-red-400">{serverError}</div>
                 )}
 
                 <div>

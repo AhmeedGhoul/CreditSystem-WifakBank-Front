@@ -4,13 +4,29 @@ import React, { useState, useMemo } from "react";
 import Label from "@/components/form/Label";
 import Input from "@/components/form/input/InputField";
 import { createCreditPool } from "@/api/creditPool";
+import { useRouter } from "next/navigation";
 
 export default function CreateCreditPoolForm() {
+    const router = useRouter();
+
     const [formData, setFormData] = useState({
         Frequency: "1",
         Period: "3",
         FinalValue: "",
     });
+
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    // Input validation
+    const isValidInput =
+        formData.Frequency &&
+        formData.Period &&
+        formData.FinalValue &&
+        Number(formData.Frequency) > 0 &&
+        Number(formData.Period) > 0 &&
+        Number(formData.FinalValue) > 0;
 
     const calculationMessage = useMemo(() => {
         const frequency = parseInt(formData.Frequency);
@@ -27,24 +43,40 @@ export default function CreateCreditPoolForm() {
             const steps = Math.floor(period / frequency);
             const amountPerStep = finalValue / steps;
 
-            return `🧮 You will pay ${amountPerStep.toFixed(2)} DT every ${frequency} month(s), over a period of ${period} months, to receive ${finalValue} DT.`;
+            return `🧮 You will pay ${amountPerStep.toFixed(
+                2
+            )} DT every ${frequency} month(s), over a period of ${period} months, to receive ${finalValue} DT.`;
         }
 
         return "";
     }, [formData]);
 
     const handleSubmit = async () => {
+        setError("");
+        setSuccess("");
+        if (!isValidInput) {
+            setError("Please enter valid positive numbers for all fields.");
+            return;
+        }
+
+        setLoading(true);
         try {
             const payload = {
                 Frequency: parseInt(formData.Frequency),
                 Period: parseInt(formData.Period),
-                FinalValue: parseInt(formData.FinalValue),
+                FinalValue: parseFloat(formData.FinalValue),
             };
 
-            const result = await createCreditPool(payload);
-            console.log("✅ Pool Created:", result);
-        } catch (error) {
-            console.error("❌ Error creating pool:", error);
+            await createCreditPool(payload);
+            setSuccess("✅ Credit pool created successfully!");
+
+            setTimeout(() => {
+                router.push("/space/creditPool");
+            }, 2000);
+        } catch (error: any) {
+            setError(error.message || "❌ Error creating credit pool.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -54,10 +86,12 @@ export default function CreateCreditPoolForm() {
                 <Label>Final Value (TND)</Label>
                 <Input
                     type="number"
+                    min={1}
                     value={formData.FinalValue}
                     onChange={(e) =>
                         setFormData({ ...formData, FinalValue: e.target.value })
                     }
+                    required
                 />
             </div>
 
@@ -65,10 +99,10 @@ export default function CreateCreditPoolForm() {
                 <Label>Period (months)</Label>
                 <Input
                     type="number"
+                    min={1}
                     value={formData.Period}
-                    onChange={(e) =>
-                        setFormData({ ...formData, Period: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, Period: e.target.value })}
+                    required
                 />
             </div>
 
@@ -76,10 +110,12 @@ export default function CreateCreditPoolForm() {
                 <Label>Frequency (months)</Label>
                 <Input
                     type="number"
+                    min={1}
                     value={formData.Frequency}
                     onChange={(e) =>
                         setFormData({ ...formData, Frequency: e.target.value })
                     }
+                    required
                 />
             </div>
 
@@ -94,11 +130,24 @@ export default function CreateCreditPoolForm() {
             <div className="md:col-span-2">
                 <button
                     type="button"
-                    className="px-6 py-3 rounded-xl bg-brand-600 text-white hover:bg-brand-700 transition shadow"
+                    className={`px-6 py-3 rounded-xl bg-brand-600 text-white hover:bg-brand-700 transition shadow ${
+                        loading ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
                     onClick={handleSubmit}
+                    disabled={loading}
                 >
-                    Create Credit Pool
+                    {loading ? "Creating..." : "Create Credit Pool"}
                 </button>
+
+                {error && (
+                    <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>
+                )}
+
+                {success && (
+                    <p className="mt-3 text-sm text-green-600 dark:text-green-400">
+                        {success}
+                    </p>
+                )}
             </div>
         </div>
     );

@@ -4,11 +4,11 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { LockIcon } from "lucide-react";
 import { BalanceOverview } from "@/components/AccountMoney/BalanceOverview";
-import MonthlySalesChart from "../ecommerce/MonthlySalesChart";
+import MonthlySalesChart from "../ecommerce/MonthlyPaymentsChart";
 import { PaymentLogs } from "./PaymentLogs";
 import MonthlyTarget from "../ecommerce/MonthlyTarget";
 import { PaymentCards } from "@/components/AccountMoney/PaymentCards";
-import { EcommerceMetrics } from "@/components/ecommerce/EcommerceMetrics";
+import { UserMetrics } from "@/components/ecommerce/UserMetrics";
 import { Button } from "@/components/ui/button";
 import AddMoneyModal from "@/components/AccountMoney/AddMoneyModal";
 import { fetchBalance, fetchCalendarPayments, payCreditPoolPayment } from "@/api/accountMoney";
@@ -169,7 +169,7 @@ export default function MoneyAccountDashboard({
                 </div>
 
                 <div className="col-span-12">
-                    <EcommerceMetrics />
+                    <UserMetrics />
                 </div>
 
                 <div className="col-span-12">

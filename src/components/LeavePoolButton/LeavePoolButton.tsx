@@ -15,13 +15,35 @@ export default function LeavePoolButton({ poolIsFull, onLeave, onSendReplacement
     const [waiting, setWaiting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // New state for confirmation modal when pool is NOT full
+    const [showConfirmLeave, setShowConfirmLeave] = useState(false);
+    const [leavingLoading, setLeavingLoading] = useState(false);
+    const [leaveError, setLeaveError] = useState<string | null>(null);
+    const [leaveSuccess, setLeaveSuccess] = useState<string | null>(null);
+
     const handleLeaveClick = () => {
         if (poolIsFull) {
             setShowModal(true);
         } else {
-            if (window.confirm("Are you sure you want to leave this credit pool?")) {
-                onLeave().catch((err) => alert(err.message || "Failed to leave credit pool"));
-            }
+            setShowConfirmLeave(true);
+        }
+    };
+
+    const confirmLeave = async () => {
+        setLeaveError(null);
+        setLeaveSuccess(null);
+        setLeavingLoading(true);
+
+        try {
+            await onLeave();
+            setLeaveSuccess("✅ You have left the credit pool successfully.");
+            setTimeout(() => {
+                setShowConfirmLeave(false);
+                setLeavingLoading(false);
+            }, 1500);
+        } catch (err: any) {
+            setLeaveError(err.message || "Failed to leave credit pool.");
+            setLeavingLoading(false);
         }
     };
 
@@ -34,7 +56,7 @@ export default function LeavePoolButton({ poolIsFull, onLeave, onSendReplacement
         setWaiting(true);
         try {
             await onSendReplacement(replacementEmail.trim());
-            // show waiting message
+            // Show waiting message
         } catch (err: any) {
             setError(err.message || "Failed to send replacement request.");
             setWaiting(false);
@@ -53,7 +75,7 @@ export default function LeavePoolButton({ poolIsFull, onLeave, onSendReplacement
                 Leave Pool
             </button>
 
-            {/* Modal */}
+            {/* Replacement Modal */}
             {showModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
                     <div className="bg-white dark:bg-gray-900 rounded-lg max-w-md w-full p-6 shadow-lg relative">
@@ -66,6 +88,7 @@ export default function LeavePoolButton({ poolIsFull, onLeave, onSendReplacement
                                         setShowModal(false);
                                         setWaiting(false);
                                         setReplacementEmail("");
+                                        setError(null);
                                     }}
                                     className="mt-6 px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded"
                                 >
@@ -93,7 +116,11 @@ export default function LeavePoolButton({ poolIsFull, onLeave, onSendReplacement
                                 {error && <p className="text-red-600 mb-2">{error}</p>}
                                 <div className="flex justify-end gap-4">
                                     <button
-                                        onClick={() => setShowModal(false)}
+                                        onClick={() => {
+                                            setShowModal(false);
+                                            setError(null);
+                                            setReplacementEmail("");
+                                        }}
                                         className="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded"
                                         disabled={waiting}
                                     >
@@ -109,6 +136,36 @@ export default function LeavePoolButton({ poolIsFull, onLeave, onSendReplacement
                                 </div>
                             </>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* Confirm Leave Modal */}
+            {showConfirmLeave && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="bg-white dark:bg-gray-900 rounded-lg max-w-md w-full p-6 shadow-lg relative text-center">
+                        <h3 className="text-xl font-semibold mb-4">Confirm Leave</h3>
+                        <p className="mb-6">Are you sure you want to leave this credit pool?</p>
+
+                        {leaveError && <p className="text-red-600 mb-4">{leaveError}</p>}
+                        {leaveSuccess && <p className="text-green-600 mb-4">{leaveSuccess}</p>}
+
+                        <div className="flex justify-center gap-4">
+                            <button
+                                onClick={() => setShowConfirmLeave(false)}
+                                className="px-6 py-2 bg-gray-300 hover:bg-gray-400 rounded"
+                                disabled={leavingLoading}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmLeave}
+                                className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded"
+                                disabled={leavingLoading}
+                            >
+                                {leavingLoading ? "Leaving..." : "Leave Pool"}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

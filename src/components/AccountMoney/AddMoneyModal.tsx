@@ -32,12 +32,10 @@ export default function AddMoneyModal({ isOpen, onClose, onSuccess }: Props) {
 
         try {
             await performStripeTopUp(amount, selectedId, stripe!, elements!);
-            alert('🎉 Money added to your balance!');
             onSuccess(amount);
             onClose();
         } catch (err: any) {
             console.error(err);
-            alert(err.message || 'Something went wrong.');
         } finally {
             setSubmitting(false);
         }

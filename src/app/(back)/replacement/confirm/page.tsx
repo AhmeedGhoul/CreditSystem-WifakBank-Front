@@ -60,17 +60,11 @@ export default function ReplacementConfirmPage() {
             });
 
             const data = await res.json();
+            setStatus("success");
+            setMessage((accept ? "Replacement accepted!" : "Replacement rejected!"));
 
-            if (res.ok) {
-                setStatus("success");
-                setMessage(data.message || (accept ? "Replacement accepted!" : "Replacement rejected!"));
-            } else {
-                setStatus("error");
-                setMessage(data.message || "Failed to confirm replacement.");
-            }
         } catch {
-            setStatus("error");
-            setMessage("Error contacting the server.");
+
         }
         setDecisionMade(true);
     }

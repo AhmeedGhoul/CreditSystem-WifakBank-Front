@@ -4,31 +4,30 @@ import MoneyAccountDashboard from "@/components/AccountMoney/AccountMoney";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import ComponentCard from "@/components/common/ComponentCard";
 import StripeWrapper from "@/components/AccountMoney/StripeWrapper";
-import {parseJwt} from "@/lib/jwt";
-import {checkUserAccess} from "@/api/user";
-import {LockIcon} from "lucide-react";
-import {router} from "next/client";
+import { parseJwt } from "@/lib/jwt";
+import { checkUserAccess } from "@/api/user";
+import { checkIfAccountExists } from "@/api/accountMoney";
+import MissingAccountModal from "@/components/MissingAccountModal/MissingAccountModal";
+import { LockIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-export default function CreditPools() {
+export default function AccountMoneyPage() {
+    const router = useRouter();
+
     const [dashboardData, setDashboardData] = useState({
         balance: 0,
         cards: [],
-        logs: []
+        logs: [],
     });
+
     const [userHasAccess, setUserHasAccess] = useState<boolean | null>(null);
+    const [userId, setUserId] = useState<number | null>(null);
+    const [hasAccount, setHasAccount] = useState<boolean | null>(null);
+    const [showMissingAccountModal, setShowMissingAccountModal] = useState(false);
+
     const [isAgent, setIsAgent] = useState(false);
     const [isAuditor, setIsAuditor] = useState(false);
-    useEffect(() => {
-        const fetchDashboard = async () => {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/account/dashboard-data`, {
-                credentials: "include"
-            });
-            const data = await res.json();
-            setDashboardData(data);
-        };
 
-        fetchDashboard();
-    }, []);
     useEffect(() => {
         const fetchAccess = async () => {
             try {
@@ -48,15 +47,12 @@ export default function CreditPools() {
                         const isAuditorRole = roles.includes("Auditor");
                         const isAdminRole = roles.includes("Admin");
 
-                        // ✅ Set individual states
                         setIsAgent(isAgentRole);
                         setIsAuditor(isAuditorRole);
 
-                        // ✅ Log real values
-                        console.log("Agent:", isAgentRole);
-                        console.log("Auditor:", isAuditorRole);
+                        const uid = decoded?.sub;
+                        setUserId(uid || null);
 
-                        // ✅ Access control
                         const accessGrantedByRequest = await checkUserAccess();
                         const isOnlyClient = roles.length === 1 && roles.includes("Client");
 
@@ -68,7 +64,6 @@ export default function CreditPools() {
                     }
                 }
 
-                // No token or roles → access denied
                 setUserHasAccess(false);
             } catch (error) {
                 console.error("Error checking access:", error);
@@ -79,27 +74,64 @@ export default function CreditPools() {
         fetchAccess();
     }, []);
 
-    if (userHasAccess === null) return null; // or loading spinner
+    useEffect(() => {
+        const checkAccountAndFetchDashboard = async () => {
+            if (!userHasAccess || !userId) return;
+
+            try {
+                const accountExists = await checkIfAccountExists(userId);
+                setHasAccount(accountExists);
+
+                if (!accountExists) {
+                    setShowMissingAccountModal(true);
+                    return;
+                }
+
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/account/dashboard-data`, {
+                    credentials: "include",
+                });
+                const data = await res.json();
+                setDashboardData(data);
+                console.log(dashboardData);
+            } catch (error) {
+                console.error("Error fetching dashboard data:", error);
+            }
+        };
+
+        checkAccountAndFetchDashboard();
+    }, [userHasAccess, userId]);
+    useEffect(() => {
+        console.log(dashboardData);
+    }, [dashboardData]);
+
+    if (userHasAccess === null) return null; // or a spinner
 
     return (
         <div>
             <div
-                className={` ${
-                    !userHasAccess ? "blur-sm opacity-90 pointer-events-none" : ""
+                className={`${
+                    !userHasAccess || hasAccount === false ? "blur-sm opacity-90 pointer-events-none" : ""
                 }`}
             >
-            <PageBreadcrumb pageTitle="Payment" />
-            <ComponentCard title="Dashboard">
-                <StripeWrapper>
-                <MoneyAccountDashboard
-                    userHasAccess={true}
-                    balance={dashboardData.balance}
-                    cards={dashboardData.cards}
-                    logs={dashboardData.logs}
-                />
-                </StripeWrapper>
-            </ComponentCard>
+                <PageBreadcrumb pageTitle="Payment" />
+                <ComponentCard title="Dashboard">
+                    <StripeWrapper>
+                        {hasAccount ? (
+                            <MoneyAccountDashboard
+                                userHasAccess={true}
+                                balance={dashboardData.balance}
+                                cards={dashboardData.cards}
+                                logs={dashboardData.logs}
+                            />
+                        ) : (
+                            <div className="text-center py-10 text-gray-500">
+                                Please create your account to view dashboard details.
+                            </div>
+                        )}
+                    </StripeWrapper>
+                </ComponentCard>
             </div>
+
             {userHasAccess === false && (
                 <div className="fixed inset-0 z-30 flex items-center justify-center bg-white/90 dark:bg-black/80">
                     <div className="text-center px-6 py-8 bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 max-w-md w-full">
@@ -122,6 +154,11 @@ export default function CreditPools() {
                     </div>
                 </div>
             )}
+
+            <MissingAccountModal
+                isOpen={showMissingAccountModal}
+                onClose={() => setShowMissingAccountModal(false)}
+            />
         </div>
     );
 }

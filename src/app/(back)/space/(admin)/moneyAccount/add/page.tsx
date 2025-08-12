@@ -13,7 +13,7 @@ import { createAccount } from "@/api/accountMoney";
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import { stripePromise } from "@/lib/stripe";
-import {Button} from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 
 function AccountMoneyForm({ userId }: { userId: number }) {
     const stripe = useStripe();
@@ -21,6 +21,7 @@ function AccountMoneyForm({ userId }: { userId: number }) {
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(false);
+    const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
     useEffect(() => {
         const match = window.matchMedia("(prefers-color-scheme: dark)");
@@ -36,7 +37,7 @@ function AccountMoneyForm({ userId }: { userId: number }) {
                 fontSize: "16px",
                 color: isDarkMode ? "#f5f5f5" : "#111",
                 backgroundColor: isDarkMode ? "#1f2937" : "#fff",
-                '::placeholder': {
+                "::placeholder": {
                     color: isDarkMode ? "#aaa" : "#888",
                 },
             },
@@ -48,10 +49,17 @@ function AccountMoneyForm({ userId }: { userId: number }) {
 
     const handleSubmit = async () => {
         if (!stripe || !elements) return;
+        setMessage(null);
         setIsSubmitting(true);
 
+        const card = elements.getElement(CardNumberElement);
+        if (!card) {
+            setMessage({ type: "error", text: "Card number field is required." });
+            setIsSubmitting(false);
+            return;
+        }
+
         try {
-            const card = elements.getElement(CardNumberElement);
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stripe/create-setup-intent`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -60,11 +68,11 @@ function AccountMoneyForm({ userId }: { userId: number }) {
 
             const { client_secret } = await res.json();
             const result = await stripe.confirmCardSetup(client_secret, {
-                payment_method: { card: card! },
+                payment_method: { card: card },
             });
 
             if (result.error) {
-                alert("❌ Card registration failed: " + result.error.message);
+                setMessage({ type: "error", text: `Card registration failed: ${result.error.message}` });
                 setIsSubmitting(false);
                 return;
             }
@@ -73,11 +81,14 @@ function AccountMoneyForm({ userId }: { userId: number }) {
                 stripePaymentIntentId: result.setupIntent!.payment_method as string,
             });
 
-            alert("✅ Account + card saved");
-            router.push("/space/creditPool");
+            setMessage({ type: "success", text: "Account and card saved successfully." });
+            router.push("/space/moneyAccount");
+            setTimeout(() => {
+                router.refresh();
+            }, 4000);
         } catch (err) {
             console.error(err);
-            alert("Something went wrong");
+            setMessage({ type: "error", text: "Something went wrong. Please try again." });
         } finally {
             setIsSubmitting(false);
         }
@@ -110,12 +121,21 @@ function AccountMoneyForm({ userId }: { userId: number }) {
                         </div>
                     </div>
 
-                    <div className="text-center mt-6">
-                        <Button
-                            onClick={handleSubmit}
-                            disabled={!stripe || isSubmitting}
-                            className="w-full"
+                    {message && (
+                        <p
+                            className={`mt-3 text-center text-sm ${
+                                message.type === "success"
+                                    ? "text-green-600 dark:text-green-400"
+                                    : "text-red-600 dark:text-red-400"
+                            }`}
+                            role="alert"
                         >
+                            {message.text}
+                        </p>
+                    )}
+
+                    <div className="text-center mt-6">
+                        <Button onClick={handleSubmit} disabled={!stripe || isSubmitting} className="w-full">
                             {isSubmitting ? "Saving..." : "Save Card"}
                         </Button>
                     </div>
