@@ -5,6 +5,8 @@ import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout";
 import "@react-pdf-viewer/core/lib/styles/index.css";
 import "@react-pdf-viewer/default-layout/lib/styles/index.css";
 
+import workerSrc from "pdfjs-dist/build/pdf.worker.min.js";
+
 interface Props {
     fileUrl: string;
     mimeType: string;
@@ -20,7 +22,6 @@ export default function DocumentPreviewModal({ fileUrl, mimeType, onClose }: Pro
     return (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center">
             <div className="relative bg-white w-[90%] h-[90%] rounded-lg shadow-lg overflow-hidden">
-                {/* Close button */}
                 <button
                     onClick={onClose}
                     className="absolute top-3 right-3 z-50 bg-white border text-gray-800 px-3 py-1 rounded-full shadow hover:bg-gray-200"
@@ -28,7 +29,6 @@ export default function DocumentPreviewModal({ fileUrl, mimeType, onClose }: Pro
                     ✕
                 </button>
 
-                {/* Content */}
                 <div className="w-full h-full">
                     {isImage && (
                         <img
@@ -39,7 +39,7 @@ export default function DocumentPreviewModal({ fileUrl, mimeType, onClose }: Pro
                     )}
 
                     {isPdf && (
-                        <Worker workerUrl={`https://unpkg.com/pdfjs-dist@3.0.279/build/pdf.worker.min.js`}>
+                        <Worker workerUrl={workerSrc}>
                             <Viewer fileUrl={fileUrl} plugins={[defaultLayoutPluginInstance]} />
                         </Worker>
                     )}

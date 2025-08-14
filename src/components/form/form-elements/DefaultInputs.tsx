@@ -54,9 +54,9 @@ export default function DefaultInputs() {
               className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
             >
               {showPassword ? (
-                <EyeIcon className="fill-gray-500 dark:fill-gray-400" />
+                <EyeIcon  />
               ) : (
-                <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400" />
+                <EyeCloseIcon />
               )}
             </button>
           </div>
@@ -68,7 +68,6 @@ export default function DefaultInputs() {
             label="Date Picker Input"
             placeholder="Select a date"
             onChange={(dates, currentDateString) => {
-              // Handle your logic
               console.log({ dates, currentDateString });
             }}
           />

@@ -9,14 +9,12 @@ export default function GarentConfirmPage() {
     const [token, setToken] = useState<string | null>(null);
     const [confirmed, setConfirmed] = useState(false);
 
-    // Extract token from query string
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const t = urlParams.get("token");
         setToken(t);
     }, []);
 
-    // Verify token on load
     useEffect(() => {
         if (!token) {
             setStatus("error");
@@ -51,7 +49,6 @@ export default function GarentConfirmPage() {
         verifyToken();
     }, [token]);
 
-    // Confirm action
     async function confirmGarent() {
         if (!token) return;
 
@@ -79,7 +76,6 @@ export default function GarentConfirmPage() {
         }
     }
 
-    // UI States
     if (status === "loading") {
         return (
             <main className="min-h-screen flex items-center justify-center bg-black text-white p-6">

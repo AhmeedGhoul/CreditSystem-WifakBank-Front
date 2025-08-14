@@ -19,7 +19,6 @@ export default function SignInForm() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // Email validation regex (simple)
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const validateInputs = () => {
@@ -83,7 +82,6 @@ export default function SignInForm() {
               </p>
             </div>
 
-            {/* FORM */}
             <form onSubmit={handleSubmit} noValidate>
               <div className="space-y-6">
                 <div>

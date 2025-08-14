@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useSidebar } from "@/context/SidebarContext";
-import { useLoading } from "@/context/LoadingContext"; // <--- import loading context
+import { useLoading } from "@/context/LoadingContext";
 
 import {
   BoxCubeIcon,
@@ -83,7 +83,7 @@ const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
   const router = useRouter();
-  const { setLoading } = useLoading(); // <-- get setLoading from context
+  const { setLoading } = useLoading();
 
   const [userRoles, setUserRoles] = useState<string[]>([]);
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
@@ -180,11 +180,9 @@ const AppSidebar: React.FC = () => {
     setOpenSubmenu((prev) => (prev?.index === index ? null : { type: "main", index }));
   };
 
-  // Navigation click handler to set loading + navigate
   const handleNavigate = async (path: string) => {
     setLoading(true);
     await router.push(path);
-    // Optional delay to avoid flicker:
     setTimeout(() => setLoading(false), 300);
   };
 

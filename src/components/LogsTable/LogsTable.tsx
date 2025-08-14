@@ -520,7 +520,6 @@ export default function LogsTable() {
                             <option value="Risk">Risk</option>
                         </select>
 
-                        {/* Success and error messages */}
                         {successMessage && (
                             <div className="text-green-600 font-semibold mt-2">{successMessage}</div>
                         )}

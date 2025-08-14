@@ -104,8 +104,7 @@ export default function AccountMoneyPage() {
         console.log(dashboardData);
     }, [dashboardData]);
 
-    if (userHasAccess === null) return null; // or a spinner
-
+    if (userHasAccess === null) return null;
     return (
         <div>
             <div

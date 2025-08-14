@@ -242,7 +242,6 @@ export default function MoneyAccountDashboard({
                 </Dialog>
             )}
 
-            {/* Insufficient Funds Dialog */}
             <Dialog open={showInsufficientFundsDialog} onOpenChange={setShowInsufficientFundsDialog}>
                 <DialogContent className="z-[9999]">
                     <DialogHeader>

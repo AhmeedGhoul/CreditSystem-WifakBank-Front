@@ -20,7 +20,7 @@ export default function GarentsTable() {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [isPopupOpen, setIsPopupOpen] = useState(false); // modal state
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
 
   const reloadGarents = async () => {
     try {

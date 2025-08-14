@@ -36,15 +36,9 @@ export default function creditPools() {
                         const isAuditorRole = roles.includes("Auditor");
                         const isAdminRole = roles.includes("Admin");
 
-                        // ✅ Set individual states
                         setIsAgent(isAgentRole);
                         setIsAuditor(isAuditorRole);
 
-                        // ✅ Log real values
-                        console.log("Agent:", isAgentRole);
-                        console.log("Auditor:", isAuditorRole);
-
-                        // ✅ Access control
                         const accessGrantedByRequest = await checkUserAccess();
                         const isOnlyClient = roles.length === 1 && roles.includes("Client");
 
@@ -56,7 +50,6 @@ export default function creditPools() {
                     }
                 }
 
-                // No token or roles → access denied
                 setUserHasAccess(false);
             } catch (error) {
                 console.error("Error checking access:", error);
@@ -67,7 +60,7 @@ export default function creditPools() {
         fetchAccess();
     }, []);
 
-    if (userHasAccess === null) return null; // or loading spinner
+    if (userHasAccess === null) return null;
 
 
     return (

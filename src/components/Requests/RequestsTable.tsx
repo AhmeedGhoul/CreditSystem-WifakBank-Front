@@ -1,4 +1,3 @@
-// components/RequestsTable/RequestsTable.tsx
 "use client";
 
 import Pagination from "@/components/LogsTable/Pagination";
@@ -260,7 +259,6 @@ export default function RequestsTable() {
                 <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
 
-            {/* Document Preview Modal */}
             {documentModal && (
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl overflow-hidden w-11/12 h-[80%] relative">

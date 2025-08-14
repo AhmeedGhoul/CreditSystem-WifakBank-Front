@@ -26,7 +26,6 @@ export async function middleware(request: NextRequest) {
         const { payload } = await jwtVerify(token, secret);
         const userRoles = payload.roles as string[];
 
-        // Vérifie les routes restreintes
         const restrictedRoute = PROTECTED_ROUTES.find((route) =>
             pathname.startsWith(route.path)
         );
@@ -42,5 +41,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ["/space/:path*"], // toutes les routes sous /space
+    matcher: ["/space/:path*"],
 };

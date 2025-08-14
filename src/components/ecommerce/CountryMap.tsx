@@ -1,5 +1,4 @@
 import React from "react";
-// import { VectorMap } from "@react-jvectormap/core";
 import { worldMill } from "@react-jvectormap/world";
 import dynamic from "next/dynamic";
 
@@ -8,7 +7,6 @@ const VectorMap = dynamic(
   { ssr: false }
 );
 
-// Define the component props
 interface CountryMapProps {
   mapColor?: string;
 }
@@ -16,7 +14,7 @@ interface CountryMapProps {
 type MarkerStyle = {
   initial: {
     fill: string;
-    r: number; // Radius for markers
+    r: number;
   };
 };
 
@@ -41,8 +39,8 @@ const CountryMap: React.FC<CountryMapProps> = ({ mapColor }) => {
         {
           initial: {
             fill: "#465FFF",
-            r: 4, // Custom radius for markers
-          }, // Type assertion to bypass strict CSS property checks
+            r: 4,
+          },
         } as MarkerStyle
       }
       markersSelectable={true}

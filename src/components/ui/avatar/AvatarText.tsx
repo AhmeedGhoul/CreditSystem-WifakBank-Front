@@ -6,7 +6,6 @@ interface AvatarTextProps {
 }
 
 const AvatarText: React.FC<AvatarTextProps> = ({ name, className = "" }) => {
-  // Generate initials from name
   const initials = name
     .split(" ")
     .map((word) => word[0])
@@ -14,7 +13,6 @@ const AvatarText: React.FC<AvatarTextProps> = ({ name, className = "" }) => {
     .toUpperCase()
     .slice(0, 2);
 
-  // Generate a consistent pastel color based on the name
   const getColorClass = (name: string) => {
     const colors = [
       "bg-brand-100 text-brand-600",

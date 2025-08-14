@@ -62,7 +62,6 @@ export default function SignContractModal({
                     }
                 }
                 setAvailableRanks(options);
-                // Reset selected rank when modal opens
                 setSelectedRank("0");
                 setSuccessMessage("");
             });
@@ -126,7 +125,6 @@ export default function SignContractModal({
             }, 1500);
         } catch (error) {
             console.error("Contract error:", error);
-            // Optionally handle error UI here if needed
             setIsGenerating(false);
         }
     };

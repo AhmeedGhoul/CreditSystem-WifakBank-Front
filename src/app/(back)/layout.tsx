@@ -4,7 +4,7 @@ import './globals.css';
 import { SidebarProvider } from '@/context/SidebarContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { NotificationProvider } from '@/layout/NotificationContext';
-import { LoadingProvider } from '@/context/LoadingContext'; // your loading context
+import { LoadingProvider } from '@/context/LoadingContext';
 
 const outfit = Outfit({
   subsets: ['latin'],

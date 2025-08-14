@@ -1,5 +1,4 @@
   "use client";
-  // import Chart from "react-apexcharts";
   import { ApexOptions } from "apexcharts";
 
   import dynamic from "next/dynamic";
@@ -7,7 +6,6 @@
   import { MoreDotIcon } from "@/icons";
   import { useState } from "react";
   import { DropdownItem } from "../ui/dropdown/DropdownItem";
-  // Dynamically import the ReactApexChart component
   const ReactApexChart = dynamic(() => import("react-apexcharts"), {
     ssr: false,
   });
@@ -34,7 +32,7 @@
           track: {
             background: "#E4E7EC",
             strokeWidth: "100%",
-            margin: 5, // margin is in pixels
+            margin: 5,
           },
           dataLabels: {
             name: {
@@ -86,7 +84,7 @@
             </div>
             <div className="relative inline-block">
               <button onClick={toggleDropdown} className="dropdown-toggle">
-                <MoreDotIcon className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" />
+                <MoreDotIcon  />
               </button>
               <Dropdown
                 isOpen={isOpen}

@@ -11,7 +11,6 @@ export default function Home() {
     const sliderRef = useRef<HTMLDivElement>(null);
     const dotsContainerRef = useRef<HTMLDivElement>(null);
 
-    // Testimonials data
     const testimonials = [
         {
             id: 1,
@@ -36,7 +35,6 @@ export default function Home() {
         }
     ];
 
-    // Open/close modal
     const openModal = (e: React.MouseEvent) => {
         e.preventDefault();
         setIsModalOpen(true);
@@ -48,7 +46,6 @@ export default function Home() {
         document.body.style.overflow = 'auto';
     };
 
-    // Navigation scroll effect
     useEffect(() => {
         const handleScroll = () => {
             if (window.scrollY > 100) {
@@ -62,7 +59,6 @@ export default function Home() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // Smooth scroll for anchor links
     useEffect(() => {
         const handleAnchorClick = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
@@ -86,7 +82,6 @@ export default function Home() {
         return () => document.removeEventListener('click', handleAnchorClick);
     }, []);
 
-    // Testimonial slider
     const nextTestimonial = () => {
         setCurrentSlide((prev) => (prev === testimonials.length - 1 ? 0 : prev + 1));
     };
@@ -99,7 +94,6 @@ export default function Home() {
         setCurrentSlide(index);
     };
 
-    // Operations tabs
     const [activeTab, setActiveTab] = useState(1);
 
     const handleTabChange = (tabId: number) => {
@@ -115,7 +109,6 @@ export default function Home() {
                 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet" />
             </Head>
 
-            {/* Navigation */}
                 <nav className="nav" ref={navRef}>
                     <Image
                         src="/images/logo/logo.svg"
@@ -144,7 +137,6 @@ export default function Home() {
                     </ul>
                 </nav>
 
-            {/* Header/Hero Section */}
             <header className="header" ref={headerRef}>
                 <div className="container">
                     <div className="header__content">
@@ -176,7 +168,6 @@ export default function Home() {
                 </div>
             </header>
 
-            {/* Features Section */}
             <section className="section" id="features">
                 <div className="container">
                     <div className="section__header">
@@ -226,7 +217,6 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* Operations Section */}
             <section className="section" id="operations">
                 <div className="container">
                     <div className="section__header">
@@ -302,7 +292,6 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* Testimonials Section */}
             <section className="section" id="testimonials">
                 <div className="container">
                     <div className="section__header">
@@ -370,7 +359,6 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* CTA Section */}
             <section className="section">
                 <div className="container">
                     <div className="cta animate-fade">
@@ -385,7 +373,6 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* Footer */}
             <footer className="footer">
                 <div className="container">
                     <div className="footer__content">
@@ -487,7 +474,6 @@ export default function Home() {
                 </div>
             </footer>
 
-            {/* Modal */}
             <div className={`overlay ${isModalOpen ? 'overlay--active' : ''}`} onClick={closeModal} />
 
             <div className={`modal ${isModalOpen ? 'modal--active' : ''}`}>

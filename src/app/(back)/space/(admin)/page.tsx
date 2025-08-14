@@ -22,10 +22,8 @@ export default function Ecommerce() {
     const [isAgent, setIsAgent] = useState(false);
     const [isAuditor, setIsAuditor] = useState(false);
 
-    // Initialize currentBalance with 0
     const [currentBalance, setCurrentBalance] = useState<number>(0);
 
-    // Fetch balance inside useEffect
     useEffect(() => {
         async function loadBalance() {
             try {
@@ -82,7 +80,7 @@ export default function Ecommerce() {
         fetchAccess();
     }, []);
 
-    if (userHasAccess === null) return null; // or loading spinner
+    if (userHasAccess === null) return null;
 
     return (
         <div className="relative">

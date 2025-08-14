@@ -69,7 +69,7 @@ export default function CreditPoolBrowser({ userHasAccess }: CreditPoolBrowserPr
     const fetchRecommendedPools = async () => {
         try {
             const recs = await fetchRecommendedCreditPools();
-            setRecommendedPools(recs.recommended); // <-- Use the inner array, not the whole object
+            setRecommendedPools(recs.recommended);
         } catch (error) {
             console.error("Failed to fetch recommended pools:", error);
         }
@@ -81,7 +81,6 @@ export default function CreditPoolBrowser({ userHasAccess }: CreditPoolBrowserPr
         fetchContractsAndPools();
     }, [currentPage, isFullFilter]);
 
-    // Fetch recommended pools once userId is set
     useEffect(() => {
         if (userId) {
             fetchRecommendedPools();
@@ -159,7 +158,6 @@ export default function CreditPoolBrowser({ userHasAccess }: CreditPoolBrowserPr
                 </>
             )}
 
-            {/* === EXISTING CREDIT POOLS SECTION === */}
             <div className="flex items-center justify-between mb-4">
                 <h1 className="text-2xl font-bold">All the Credit Circles</h1>
                 <select

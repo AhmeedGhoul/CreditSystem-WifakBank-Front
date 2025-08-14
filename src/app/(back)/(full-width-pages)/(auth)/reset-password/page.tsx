@@ -20,10 +20,8 @@ export default function ResetPasswordPage() {
     const [successMessage, setSuccessMessage] = useState('');
     const [loading, setLoading] = useState(false);
 
-    // Basic password strength check
     const validatePassword = (pwd: string) => {
         if (pwd.length < 6) return 'Password must be at least 6 characters.';
-        // Add more rules if needed: uppercase, numbers, symbols...
         return '';
     };
 

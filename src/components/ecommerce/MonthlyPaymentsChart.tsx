@@ -24,7 +24,7 @@ export default function MonthlyPaymentsChart() {
   }, []);
 
   const options: ApexOptions = {
-    colors: ["#2dd4bf"], // teal color for payments
+    colors: ["#2dd4bf"],
     chart: {
       fontFamily: "Outfit, sans-serif",
       type: "bar",
@@ -83,7 +83,7 @@ export default function MonthlyPaymentsChart() {
 
           <div className="relative inline-block">
             <button onClick={toggleDropdown} className="dropdown-toggle">
-              <MoreDotIcon className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" />
+              <MoreDotIcon  />
             </button>
             <Dropdown
                 isOpen={isOpen}

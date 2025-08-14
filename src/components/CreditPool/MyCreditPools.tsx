@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import Badge from "@/components/CreditPool/badge";
 import {fetchMyCreditPools, leaveCreditPool, sendReplacementRequest} from "@/api/creditPool";
 import LeavePoolButton from "@/components/LeavePoolButton/LeavePoolButton";
-import { LogOut } from "lucide-react"; // Icon
 
 export default function MyCreditPoolsList() {
     const [pools, setPools] = useState<CreditPool[]>([]);
@@ -33,7 +32,6 @@ export default function MyCreditPoolsList() {
                         key={pool.creditPoolId}
                         className="relative rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-white/[0.03] p-6 shadow-sm min-h-[220px]"
                     >
-                        {/* Header */}
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-bold text-gray-800 dark:text-white">
                                 Credit Pool #{pool.creditPoolId}

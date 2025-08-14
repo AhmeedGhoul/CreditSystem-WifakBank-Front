@@ -15,7 +15,6 @@ export default function LeavePoolButton({ poolIsFull, onLeave, onSendReplacement
     const [waiting, setWaiting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // New state for confirmation modal when pool is NOT full
     const [showConfirmLeave, setShowConfirmLeave] = useState(false);
     const [leavingLoading, setLeavingLoading] = useState(false);
     const [leaveError, setLeaveError] = useState<string | null>(null);
@@ -56,7 +55,6 @@ export default function LeavePoolButton({ poolIsFull, onLeave, onSendReplacement
         setWaiting(true);
         try {
             await onSendReplacement(replacementEmail.trim());
-            // Show waiting message
         } catch (err: any) {
             setError(err.message || "Failed to send replacement request.");
             setWaiting(false);
@@ -75,7 +73,6 @@ export default function LeavePoolButton({ poolIsFull, onLeave, onSendReplacement
                 Leave Pool
             </button>
 
-            {/* Replacement Modal */}
             {showModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
                     <div className="bg-white dark:bg-gray-900 rounded-lg max-w-md w-full p-6 shadow-lg relative">
@@ -140,7 +137,6 @@ export default function LeavePoolButton({ poolIsFull, onLeave, onSendReplacement
                 </div>
             )}
 
-            {/* Confirm Leave Modal */}
             {showConfirmLeave && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
                     <div className="bg-white dark:bg-gray-900 rounded-lg max-w-md w-full p-6 shadow-lg relative text-center">

@@ -13,7 +13,6 @@ export default function PasswordResetRequest() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
-    // Basic email format validation
     const validateEmail = (email: string) => {
         const emailRegex =
             /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

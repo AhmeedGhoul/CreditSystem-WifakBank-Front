@@ -122,7 +122,7 @@ export interface UserStats {
 }
 
 export async function fetchUserStats(): Promise<UserStats> {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/stats`); // Adjust path if needed
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/stats`);
     if (!res.ok) {
         throw new Error('Failed to fetch user stats');
     }

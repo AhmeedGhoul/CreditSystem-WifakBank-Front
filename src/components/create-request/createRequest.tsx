@@ -63,12 +63,10 @@ export default function SubmitRequestForm() {
     });
 
     const validateForm = () => {
-        // Example: purpose, monthlyIncome, employmentStatus, yearsOfEmployment are required
         if (!formData.purpose.trim()) return "Purpose is required";
         if (!formData.monthlyIncome || isNaN(Number(formData.monthlyIncome))) return "Valid monthly income is required";
         if (!formData.employmentStatus) return "Employment status is required";
         if (!formData.yearsOfEmployment || isNaN(Number(formData.yearsOfEmployment))) return "Valid years of employment is required";
-        // Add more validation if needed
         return null;
     };
 
@@ -128,7 +126,6 @@ export default function SubmitRequestForm() {
 
     return (
         <div className="space-y-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* All your inputs... */}
             <div className="md:col-span-2">
                 <Label>Purpose of Request</Label>
                 <Input
@@ -267,7 +264,6 @@ export default function SubmitRequestForm() {
 
 
 
-            {/* Upload section */}
             <div className="md:col-span-2">
                 <Label>Upload Supporting Documents</Label>
                 <div
@@ -292,13 +288,11 @@ export default function SubmitRequestForm() {
                 </div>
             </div>
 
-            {/* Success and error messages */}
             <div className="md:col-span-2">
                 {successMessage && <div className="text-green-600 font-semibold">{successMessage}</div>}
                 {errorMessage && <div className="text-red-600 font-semibold">{errorMessage}</div>}
             </div>
 
-            {/* Submit button */}
             <div className="md:col-span-2">
                 <button
                     type="button"

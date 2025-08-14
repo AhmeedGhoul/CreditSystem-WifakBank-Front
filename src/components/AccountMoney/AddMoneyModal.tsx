@@ -45,13 +45,11 @@ export default function AddMoneyModal({ isOpen, onClose, onSuccess }: Props) {
 
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4">
-            {/* Background blocker */}
             <div
                 className="absolute inset-0 backdrop-blur-sm"
                 onClick={onClose}
             ></div>
 
-            {/* Modal content */}
             <div
                 className="relative z-50 w-full max-w-md bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700"
                 role="dialog"

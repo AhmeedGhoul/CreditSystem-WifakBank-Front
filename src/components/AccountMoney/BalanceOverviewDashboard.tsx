@@ -17,7 +17,7 @@ export function BalanceOverviewDashboard({ balance }: { balance: number }) {
 
     const series = [percentage];
     const options: ApexOptions = {
-        colors: ["#465FFF"], // primary blue accent
+        colors: ["#465FFF"],
         chart: {
             fontFamily: "Outfit, sans-serif",
             type: "radialBar",
@@ -73,7 +73,7 @@ export function BalanceOverviewDashboard({ balance }: { balance: number }) {
                             className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition"
                             aria-label="Options"
                         >
-                            <MoreDotIcon className="w-6 h-6 text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" />
+                            <MoreDotIcon  />
                         </button>
                         <Dropdown isOpen={isOpen} onClose={closeDropdown} className="w-36 p-2">
                             <DropdownItem

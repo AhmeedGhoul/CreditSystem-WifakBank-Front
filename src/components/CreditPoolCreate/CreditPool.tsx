@@ -19,7 +19,6 @@ export default function CreateCreditPoolForm() {
     const [success, setSuccess] = useState("");
     const [loading, setLoading] = useState(false);
 
-    // Input validation
     const isValidInput =
         formData.Frequency &&
         formData.Period &&
